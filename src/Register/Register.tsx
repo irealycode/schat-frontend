@@ -93,11 +93,11 @@ const Register: React.FC = () => {
             return;
         }
 
-        // if (!img) {
-        //     customNotif("Image field is empty !","rgb(203, 27, 27)");
-        //     setError(5);
-        //     return;
-        // }
+        if (!img) {
+            customNotif("Image field is empty !","rgb(203, 27, 27)");
+            setError(5);
+            return;
+        }
         
         setLoading(true)
         const formData = new FormData();
@@ -105,7 +105,7 @@ const Register: React.FC = () => {
         formData.append("bio", bio.trim());
         formData.append("email", emailDef.trim());
         formData.append("password", pass.trim());
-        // formData.append("avatar", img);
+        formData.append("avatar", img);
       
         try {
           const response = await fetch(`http://${host}:${port}/api/register`, {
