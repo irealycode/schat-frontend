@@ -160,6 +160,11 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
                     addMessageReceived(data.message)
                 }
                 setFriends(prev =>  prev.map((fs) => (fs.id === data.message.chatId?{...fs,last_message:{chatId:data.message.chatId,userId:data.message.userId,content:data.message.content,new:data.message.chatId !== selectedChatRef.current?.id}}:fs)))
+                const fr = friendsRef.current.find((f)=>f.id===data.message.chatId)
+                if (!fr) {
+                    getOneChat(data.message.chatId);
+                }
+                
             }
         });
 
@@ -189,8 +194,10 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
 
     const getFriendsImages = (chats : ChatType[]) =>{
         chats.forEach(chat => {
-            axios.get(`http://${host}:${port}/api/download/images?imageId=${chat.user.avatar}`,{headers:{'Authorization':`Bearer ${token}`}}).then((res)=>{
-                console.log(res.data)
+            axios.get(`http://${host}:${port}/api/download/images?imageId=${encodeURIComponent(chat.user.avatar)}`,{headers:{'Authorization':`Bearer ${token}`}}).then((res)=>{
+                if (res.status === 200) {
+                    setFriends(prev=>prev.map((f)=>f.id === chat.id?({...f,user:{...f.user,avatar:res.data.url}}):f))
+                }
             }).catch((err)=>{
                 console.log(err)
             })
@@ -263,6 +270,21 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
         }
     }
 
+    const getOneChat = (id : string) =>{
+        axios.get(`http://${host}:${port}/api/chats`,{headers:{'Authorization':`Bearer ${token}`}}).then((res1)=>{
+            if (res1.status === 200) {
+                // console.log(res1.data.chats.map((chat : DumbChatType)=> ({id:chat.id,last_message:chat.last_message,status:chat.status,number:0,user:chat.user1.id === user?.id?chat.user2:chat.user1})))
+                const fr = res1.data.chats.find((chat : DumbChatType)=> chat.id === id)
+                setFriends(prev=> [...prev,{id:fr.id,last_message:fr.last_message,status:fr.status,number:0,user:fr.user1.id === user?.id?fr.user2:fr.user1}])
+                friendsRef.current = [...friendsRef.current,fr]
+                getFriendsImages(friendsRef.current)
+
+            }
+        }).catch((res)=>{
+            customNotif(`An error has accured ! ${res.status}`,"rgb(203, 27, 27)")
+        })
+    }
+
     const getChats = () =>{
         axios.get(`http://${host}:${port}/api/chats`,{headers:{'Authorization':`Bearer ${token}`}}).then((res1)=>{
             if (res1.status === 200) {
@@ -270,6 +292,7 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
                 const filteredFriends = res1.data.chats.map((chat : DumbChatType)=> ({id:chat.id,last_message:chat.last_message,status:chat.status,number:0,user:chat.user1.id === user?.id?chat.user2:chat.user1}))
                 setFriends(filteredFriends)
                 friendsRef.current = filteredFriends
+                getFriendsImages(filteredFriends)
             }
         }).catch((res)=>{
             customNotif(`An error has accured ! ${res.status}`,"rgb(203, 27, 27)")
@@ -352,16 +375,16 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
                 </div>
                 <div className='ms-21' style={{width:'calc(100% - 30px)',display:"flex",boxSizing:'border-box',alignItems:"center",justifyContent:"start",overflow:'hidden',padding:4,marginTop:6}} >
                     <p onClick={()=>setFilterType(0)} style={{fontWeight:'lighter',margin:'0 5px',color:'white',cursor:'pointer',backgroundColor:filterType === 0?'#1DB954':'#1db95425',padding:'4px 10px',borderRadius:20}} >All</p>
-                    <p onClick={()=>setFilterType(1) } style={{fontWeight:'lighter',margin:'0 5px',color:'white',cursor:'pointer',backgroundColor:filterType === 1?'#1DB954':'#1db95425',padding:'4px 10px',borderRadius:20}} >Read</p>
+                    <p onClick={()=>setFilterType(1)} style={{fontWeight:'lighter',margin:'0 5px',color:'white',cursor:'pointer',backgroundColor:filterType === 1?'#1DB954':'#1db95425',padding:'4px 10px',borderRadius:20}} >Read</p>
                     <p onClick={()=>setFilterType(2)} style={{fontWeight:'lighter',margin:'0 5px',color:'white',cursor:'pointer',backgroundColor:filterType === 2?'#1DB954':'#1db95425',padding:'4px 10px',borderRadius:20}} >Unread</p>
                 </div>
                 <div style={{height:'calc(100% - 107px)',width:'100%',overflowY:'scroll'}} >
-                    {friends.filter((friend)=>friend.user.username.trim().toLocaleLowerCase().includes(searchFriends.toLocaleLowerCase())).map((friend,i)=>{
+                    {friends.filter((friend)=>friend.user.username.trim().toLocaleLowerCase().includes(searchFriends.toLocaleLowerCase()) && (filterType === 0 || (filterType === 2 && friend.last_message && friend.last_message.new) || (filterType === 1 && friend.last_message && !friend.last_message.new))).map((friend,i)=>{
                             return(
                                 <div onClick={()=>{selectChat(friend)}} className='nf-73' style={{height:70,transition:'0.3s',cursor:'pointer',width:'100%',display:'flex',alignItems:'center',justifyContent:'start',padding:'0 10px',position:'relative',boxSizing:'border-box'}} >
                                     {friend.last_message && friend.last_message.new?<div style={{position:'absolute',top:15,right:15,backgroundColor:'#1DB954',height:10,width:10,borderRadius:10}} ></div>:null}
                                     {i!=0?<div style={{height:2,width:'80%',borderRadius:4,backgroundColor:'#666',position:"absolute",top:-1,left:'50%',transform:'translateX(-50%)'}} ></div>:null}
-                                    <img src="https://placehold.co/400x400" style={{height:45,width:45,borderRadius:25}}/>
+                                    <img src={friend.user.avatar} style={{height:45,width:45,borderRadius:25}}/>
                                     <div style={{width:'calc(100% - 55px)',display:'flex',flexDirection:'column',alignItems:'start',justifyContent:'center',boxSizing:'border-box'}} >
                                         <p style={{width:'100%',fontWeight:'500',fontSize:18,margin:'0 5px',color:'white',cursor:'pointer',padding:'4px 10px',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}} ><span style={{color:'#1DB954',fontSize:20}} ># </span>{friend.user.username}</p>
                                         {/* <p style={{width:'calc(100% - 65px)',fontWeight:'lighter',margin:'0 5px',fontSize:14,color:'white',cursor:'pointer',padding:'0px 10px',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}} ><span style={{color:friend.number?"#1DB954":"white"}}>{friend.last_message?.content}</span></p> */}
@@ -438,7 +461,7 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
             {/* INSIDE */}
 
 
-            <Chat ref={chatRef} socket={sockett} selectedChat={selectedChat} setSelectedChat={setSelectedChat} initialMessages={messages} userId={user?.id} chatRemoved={chatRemoved} setChatRemoved={setChatRemoved} setFriends={setFriends} setIsTyping={setIsTyping} isTyping={isTyping} />
+            <Chat ref={chatRef} selectedChatRef={selectedChatRef} socket={sockett} selectedChat={selectedChat} setSelectedChat={setSelectedChat} initialMessages={messages} userId={user?.id} chatRemoved={chatRemoved} setChatRemoved={setChatRemoved} setFriends={setFriends} setIsTyping={setIsTyping} isTyping={isTyping} />
 
         </div>
     </div>

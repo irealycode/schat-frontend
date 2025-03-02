@@ -27,11 +27,57 @@ const Register: React.FC = () => {
         
     };
 
+    const resizeImage = (file: File, callback: (resizedBlob: File | null) => void): void => {
+        const img = new Image();
+        img.src = URL.createObjectURL(file);
+      
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const ctx = canvas.getContext("2d");
+      
+          if (!ctx) {
+            console.error("Canvas context is not supported.");
+            return;
+          }
+      
+          canvas.width = 500;
+          canvas.height = 500;
+      
+          ctx.drawImage(img, 0, 0, 500, 500);
+      
+          canvas.toBlob(
+            (blob) => {
+                if (blob) {
+                    const resizedFile = new File([blob], file.name, { type: file.type });
+                    callback(resizedFile);
+                  } else {
+                    callback(null);
+                  }
+            },
+            file.type,
+            1.0 // quality
+          );
+        };
+      
+        img.onerror = () => {
+          console.error("Error loading image.");
+          callback(null);
+        };
+    };
+
 
     const fileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const selectedFile = event.target.files?.[0] || null
-        setImg(selectedFile)
-      };
+        if (selectedFile) {
+            resizeImage(selectedFile, (blob)=>{
+                setImg(blob)
+            })
+        }
+        setImg(null)
+    };
+
+
+      
 
     const register = async () => {
 

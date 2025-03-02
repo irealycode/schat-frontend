@@ -30,7 +30,8 @@ interface ChatComponentProps {
     initialMessages: TallMessage[] | null;
     setFriends: React.Dispatch<React.SetStateAction<ChatType[]>>;
     setIsTyping: React.Dispatch<React.SetStateAction<boolean>>;
-    isTyping: boolean
+    isTyping: boolean;
+    selectedChatRef:React.RefObject<ChatType | null>;
 }
 
 export interface sendRefComp{
@@ -42,7 +43,7 @@ interface sendProps {
     msg : string;
 }
 
-const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({socket,selectedChat,userId,chatRemoved,initialMessages,isTyping,setChatRemoved,setSelectedChat,setFriends,setIsTyping} : ChatComponentProps,ref) {
+const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({socket,selectedChatRef,selectedChat,userId,chatRemoved,initialMessages,isTyping,setChatRemoved,setSelectedChat,setFriends,setIsTyping} : ChatComponentProps,ref) {
 
     useImperativeHandle(ref ,() =>({
         sendFriendsMessage(msg){
@@ -145,6 +146,7 @@ const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({sock
 
     const removeChat = () =>{
         setChatRemoved(true);
+        selectedChatRef.current = null;
         setTimeout(()=>{
             setSelectedChat(null);
         },300);
