@@ -125,6 +125,7 @@ const Register: React.FC = () => {
             setPassC("")
             setUsername("")
             setImg(null)
+            return
           }
           console.log("Success:", result);
           if (result.response === "invalid email") {
@@ -143,6 +144,10 @@ const Register: React.FC = () => {
             setLoading(false)
             customNotif("Invalid Avatar !","rgb(203, 27, 27)");
             setError(1);
+            return;
+          }else{
+            setLoading(false)
+            customNotif("Some error !","rgb(203, 27, 27)");
             return;
           }
         } catch (error) {

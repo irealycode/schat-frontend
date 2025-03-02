@@ -47,6 +47,7 @@ export type ChatType = {
     user: {
         id: string,
         username: string,
+        avatar: string,
     },
     
 }
@@ -69,10 +70,12 @@ type DumbChatType = {
     user1: {
         id: string,
         username: string,
+        avatar: string,
     },
     user2: {
         id: string,
         username: string,
+        avatar: string,
     },
     
 }
@@ -184,7 +187,16 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
         })
     },[])
 
-    
+    const getFriendsImages = (chats : ChatType[]) =>{
+        chats.forEach(chat => {
+            axios.get(`http://${host}:${port}/api/download/images?imageId=${chat.user.avatar}`,{headers:{'Authorization':`Bearer ${token}`}}).then((res)=>{
+                console.log(res.data)
+            }).catch((err)=>{
+                console.log(err)
+            })
+        });
+        
+    }
 
     const getUser = () =>{
         console.log(token)
@@ -195,8 +207,9 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
                     if (res1.status === 200) {
                         // console.log(res1.data.chats.map((chat : DumbChatType)=> ({id:chat.id,last_message:chat.last_message,status:chat.status,number:0,user:chat.user1.id === res.data.user.id?chat.user2:chat.user1})))
                         const filteredFriends = res1.data.chats.map((chat : DumbChatType)=> ({id:chat.id,last_message:chat.last_message,status:chat.status,number:0,user:chat.user1.id === res.data.user.id?chat.user2:chat.user1}))
-                        console.log(res1.data.chats)
+                        console.log(filteredFriends)
                         setFriends(filteredFriends)
+                        getFriendsImages(filteredFriends)
                         friendsRef.current = filteredFriends
                         // setUser(res.data.user)
                     }
@@ -270,7 +283,7 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
                 getChats()
                 setSearchUsers("")
                 setOpenSearch(false)
-                setChatRemoved(false)
+                setChatRemoved(true)
                 setFoundUsers([])
             }
         }).catch(()=>{
