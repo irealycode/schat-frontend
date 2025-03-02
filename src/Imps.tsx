@@ -3,5 +3,5 @@ export type Notif = {
     text: string
 }
 
-export const host = "127.0.0.1"
-export const port = "3000"
+export const host = process.env.REACT_APP_BACKEND_HOST
+export const port = process.env.REACT_APP_BACKEND_PORT
