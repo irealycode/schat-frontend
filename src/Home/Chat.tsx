@@ -33,6 +33,7 @@ interface ChatComponentProps {
     isTyping: boolean;
     selectedChatRef:React.RefObject<ChatType | null>;
     typer: Typer | null;
+    userStatus: string;
 }
 
 export interface sendRefComp{
@@ -44,7 +45,7 @@ interface sendProps {
     msg : string;
 }
 
-const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({socket,selectedChatRef,selectedChat,userId,chatRemoved,initialMessages,isTyping,typer,setChatRemoved,setSelectedChat,setFriends,setIsTyping} : ChatComponentProps,ref) {
+const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({socket,selectedChatRef,selectedChat,userId,chatRemoved,initialMessages,isTyping,typer,userStatus,setChatRemoved,setSelectedChat,setFriends,setIsTyping} : ChatComponentProps,ref) {
 
     useImperativeHandle(ref ,() =>({
         sendFriendsMessage(msg){
@@ -61,7 +62,7 @@ const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({sock
     const [messages,setMessages] = React.useState<Messages[]>([]);
     const [messageInput,setMessageInput] = React.useState("")
     const [isInputFocused, setIsInputFocused] = React.useState(false);
-
+    const inputRef = useRef<HTMLInputElement | null>(null);
 
     
     
@@ -76,6 +77,8 @@ const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({sock
     React.useEffect(()=>{
         if (initialMessages) {
             setMessages(initialMessages.map((msg)=> ({userId:msg.userId,message:{id:msg.id,text:msg.content,time:new Date(msg.sentAt),reply:msg.reply}})).reverse())
+            setReply(null)
+            setMessageInput("")
         }else{
             setMessages([])
         }
@@ -185,6 +188,29 @@ const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({sock
         return date > oneSecondAgo;
     }
 
+    const pushReply = (id : string,text: string) =>{
+        setReply({id:id,content:text});
+        inputRef.current?.focus();
+    }
+
+    const timeAgo = (date : string) => {
+        const now = new Date();
+        const past = new Date(parseInt(date));
+        const diff = Math.floor((now.getTime() - past.getTime()) / 1000);
+      
+        if (diff < 60) return `Last online ${diff} seconde${diff > 1 ? 's' : ''} ago`;
+        const minutes = Math.floor(diff / 60);
+        if (minutes < 60) return `Last online ${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `Last online ${hours} hour${hours > 1 ? 's' : ''} ago`;
+        const days = Math.floor(hours / 24);
+        if (days < 30) return `Last online ${days} day${days > 1 ? 's' : ''} ago`;
+        const months = Math.floor(days / 30);
+        if (months < 12) return `Last online ${months} month`;
+        const years = Math.floor(months / 12);
+        return `Last online ${years} year${years > 1 ? 's' : ''} ago`;
+    }
+
     // const capFirstChar = (s : string | undefined) => s?s.charAt(0).toUpperCase() + s.slice(1).toLowerCase():null;
 
     
@@ -195,7 +221,7 @@ const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({sock
                         <img onClick={()=>removeChat()} src="/assets/imgs/arrow.svg" style={{height:36,cursor:'pointer'}} />
                         <div style={{width:'calc(100% - 5vh)',height:'100%',display:'flex',flexDirection:'column',alignItems:'start',justifyContent:'center'}} >
                             <p style={{width:'100%',color:'white',fontWeight:500,fontSize:26,margin:0,cursor:'default',whiteSpace:"nowrap",overflow:'hidden',textOverflow:'ellipsis'}} ><span style={{color:'#1DB954'}} ># </span>{selectedChat?.user.username}</p>
-                            {(typer && typer.chatId !== selectedChat.id || !typer)?<p style={{color:selectedChat.status?'#1DB954':'#999',fontWeight:500,fontSize:14,margin:0,cursor:'default'}} >{selectedChat.status?'Online':'Offline'}</p>:null}
+                            {(typer && typer.chatId !== selectedChat.id || !typer)?<p style={{color:userStatus==="online"?'#1DB954':'#999',fontWeight:500,fontSize:14,margin:0,cursor:'default'}} >{userStatus==="online"?'Online':timeAgo(userStatus)}</p>:null}
                             {typer && typer.chatId === selectedChat.id?<p className='dot-holder' style={{color:'#1DB954',fontWeight:'500',textAlign:'center',fontSize:14,margin:0,display:'flex',height:16.67,flexDirection:'row',alignItems:"center",justifyContent:'center'}} >Typing<p className='dot one' >.</p><p className='dot two' >.</p><p className='dot three' >.</p></p>:null}
                         </div>
                     </div>
@@ -212,7 +238,7 @@ const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({sock
                         <img src="/assets/imgs/close.svg" onClick={()=>setReply(null)} style={{position:'absolute',cursor:'pointer',height:20,right:10}} />
                     </div>:null}
                     <div style={{width:'100%',height:50,display:'flex',flexDirection:"row",alignItems:'center',justifyContent:'start'}} >
-                        <input onKeyDown={(e)=>{if(e.key === "Enter"){sendMessage();handleTypingStopped()}}} onFocus={() => setIsInputFocused(true)} onBlur={() => setIsInputFocused(false)} onChange={(event)=>{setMessageInput(event.target.value);handleKeyDown()}} value={messageInput} placeholder='Type...' style={{width:'calc(100% - 132px)',color:'white',border:0,outline:'none',fontSize:16,backgroundColor:'transparent',padding:'5px 20px'}} />
+                        <input ref={inputRef} onKeyDown={(e)=>{if(e.key === "Enter"){sendMessage();handleTypingStopped()}}} onFocus={() => setIsInputFocused(true)} onBlur={() => setIsInputFocused(false)} onChange={(event)=>{setMessageInput(event.target.value);handleKeyDown()}} value={messageInput} placeholder='Type...' style={{width:'calc(100% - 132px)',color:'white',border:0,outline:'none',fontSize:16,backgroundColor:'transparent',padding:'5px 20px'}} />
                         <div onClick={()=>sendMessage()}  className='send' style={{height:24,position:'absolute',right:5,cursor:'pointer',backgroundColor:'#1DB954',borderRadius:24,padding:7,display:'flex',flexDirection:"row",alignItems:'center',justifyContent:'center'}} >
                             <p style={{color:'white',fontWeight:'500',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}} >Send</p>
                             <img src="/assets/imgs/send.svg" style={{height:24}} />
@@ -241,7 +267,7 @@ const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({sock
                                             </div>:null}
                                             <p style={{color:"#fff",margin:0,fontWeight:'lighter',fontSize:16,wordBreak:'break-word',overflowWrap:'break-word',hyphens:'auto',alignSelf:'end'}} >{msg.message.text}</p>
                                             <p className="time" style={{color:'#ddd',position:'absolute',fontWeight:'lighter',fontSize:10,margin:0}} >{formatTime(msg.message.time)}</p>
-                                            <img onClick={()=>setReply({id:msg.message.id,content:msg.message.text})} className='reply-btn' src="/assets/imgs/reply.svg" style={{cursor:'pointer',height:20,zIndex:2,position:'absolute',left:0,transform:'translateX(calc(-100% - 10px)) rotateY(180deg)'}}  />
+                                            <img onClick={()=>{pushReply(msg.message.id,msg.message.text)}} className='reply-btn' src="/assets/imgs/reply.svg" style={{cursor:'pointer',height:20,zIndex:2,position:'absolute',left:0,transform:'translateX(calc(-100% - 10px)) rotateY(180deg)'}}  />
                                         </div>
                                     )
                                 }
@@ -252,7 +278,7 @@ const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({sock
                                         </div>:null}
                                         <p style={{color:"#121212",margin:0,fontWeight:'lighter',fontSize:16,wordBreak:'break-word',overflowWrap:'break-word',hyphens:'auto',alignSelf:'start'}} >{msg.message.text}</p> 
                                         <p className="time" style={{color:'#ddd',position:'absolute',fontWeight:'lighter',fontSize:10,margin:0}} >{formatTime(msg.message.time)}</p>
-                                        <img onClick={()=>setReply({id:msg.message.id,content:msg.message.text})} className='reply-btn' src="/assets/imgs/reply.svg" style={{cursor:'pointer',height:20,position:'absolute',right:0,transform:'translateX(calc(100% + 10px))'}}  />
+                                        <img onClick={()=>pushReply(msg.message.id,msg.message.text)} className='reply-btn' src="/assets/imgs/reply.svg" style={{cursor:'pointer',height:20,position:'absolute',right:0,transform:'translateX(calc(100% + 10px))'}}  />
                                     </div>
                                 )
                             }).reverse()

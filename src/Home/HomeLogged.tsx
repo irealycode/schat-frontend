@@ -136,7 +136,7 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
     const [isTyping, setIsTyping] = React.useState(false);
     const [typer, setTyper] = React.useState<Typer | null>(null);
     const [selectedImage,setSelectedImage] = React.useState<string | null>(null)
-    const [userStatus,setUserStatus] = React.useState(false)
+    const [userStatus,setUserStatus] = React.useState("")
     
     const customNotif = (msg : string,color : string) => {
         setNotifs(prev=> [{text:msg,color:color},...prev])
@@ -340,7 +340,9 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
                 setMessages(res.data.messages)
                 axios.get(`http://${host}:${port}/api/users/status?userId=${friend.user.id}`,{headers:{'Authorization':`Bearer ${token}`}}).then((res1)=>{
                     console.log(res1)
-                    setUserStatus(true)
+                    if (res1.data.status) {
+                        setUserStatus(res1.data.status)
+                    }
                 }).catch(()=>{
 
                 })
@@ -542,7 +544,7 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
             {/* INSIDE */}
 
             
-            <Chat ref={chatRef} selectedChatRef={selectedChatRef} typer={typer} socket={sockett} selectedChat={selectedChat} setSelectedChat={setSelectedChat} initialMessages={messages} userId={user?.id} chatRemoved={chatRemoved} setChatRemoved={setChatRemoved} setFriends={setFriends} setIsTyping={setIsTyping} isTyping={isTyping} />
+            <Chat ref={chatRef} selectedChatRef={selectedChatRef} typer={typer} socket={sockett} userStatus={userStatus} selectedChat={selectedChat} setSelectedChat={setSelectedChat} initialMessages={messages} userId={user?.id} chatRemoved={chatRemoved} setChatRemoved={setChatRemoved} setFriends={setFriends} setIsTyping={setIsTyping} isTyping={isTyping} />
 
         </div>
     </div>
