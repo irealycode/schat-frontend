@@ -1,0 +1,501 @@
+/* arabic */
+@font-face {
+    font-family: 'Rubik';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url(../fonts/iJWKBXyIfDnIV7nErXyi0A.woff2) format('woff2');
+    unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC, U+102E0-102FB, U+10E60-10E7E, U+10EC2-10EC4, U+10EFC-10EFF, U+1EE00-1EE03, U+1EE05-1EE1F, U+1EE21-1EE22, U+1EE24, U+1EE27, U+1EE29-1EE32, U+1EE34-1EE37, U+1EE39, U+1EE3B, U+1EE42, U+1EE47, U+1EE49, U+1EE4B, U+1EE4D-1EE4F, U+1EE51-1EE52, U+1EE54, U+1EE57, U+1EE59, U+1EE5B, U+1EE5D, U+1EE5F, U+1EE61-1EE62, U+1EE64, U+1EE67-1EE6A, U+1EE6C-1EE72, U+1EE74-1EE77, U+1EE79-1EE7C, U+1EE7E, U+1EE80-1EE89, U+1EE8B-1EE9B, U+1EEA1-1EEA3, U+1EEA5-1EEA9, U+1EEAB-1EEBB, U+1EEF0-1EEF1;
+  }
+  /* cyrillic-ext */
+  @font-face {
+    font-family: 'Rubik';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url(../fonts/iJWKBXyIfDnIV7nMrXyi0A.woff2) format('woff2');
+    unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+  }
+  /* cyrillic */
+  @font-face {
+    font-family: 'Rubik';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url(../fonts/iJWKBXyIfDnIV7nFrXyi0A.woff2) format('woff2');
+    unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+  }
+  /* hebrew */
+  @font-face {
+    font-family: 'Rubik';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url(../fonts/iJWKBXyIfDnIV7nDrXyi0A.woff2) format('woff2');
+    unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F;
+  }
+  /* latin-ext */
+  @font-face {
+    font-family: 'Rubik';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url(../fonts/iJWKBXyIfDnIV7nPrXyi0A.woff2) format('woff2');
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  }
+  /* latin */
+  @font-face {
+    font-family: 'Rubik';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url(../fonts/iJWKBXyIfDnIV7nBrXw.woff2) format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  }
+  /* arabic */
+  @font-face {
+    font-family: 'Rubik';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url(../fonts/iJWKBXyIfDnIV7nErXyi0A.woff2) format('woff2');
+    unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC, U+102E0-102FB, U+10E60-10E7E, U+10EC2-10EC4, U+10EFC-10EFF, U+1EE00-1EE03, U+1EE05-1EE1F, U+1EE21-1EE22, U+1EE24, U+1EE27, U+1EE29-1EE32, U+1EE34-1EE37, U+1EE39, U+1EE3B, U+1EE42, U+1EE47, U+1EE49, U+1EE4B, U+1EE4D-1EE4F, U+1EE51-1EE52, U+1EE54, U+1EE57, U+1EE59, U+1EE5B, U+1EE5D, U+1EE5F, U+1EE61-1EE62, U+1EE64, U+1EE67-1EE6A, U+1EE6C-1EE72, U+1EE74-1EE77, U+1EE79-1EE7C, U+1EE7E, U+1EE80-1EE89, U+1EE8B-1EE9B, U+1EEA1-1EEA3, U+1EEA5-1EEA9, U+1EEAB-1EEBB, U+1EEF0-1EEF1;
+  }
+  /* cyrillic-ext */
+  @font-face {
+    font-family: 'Rubik';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url(../fonts/iJWKBXyIfDnIV7nMrXyi0A.woff2) format('woff2');
+    unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+  }
+  /* cyrillic */
+  @font-face {
+    font-family: 'Rubik';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url(../fonts/iJWKBXyIfDnIV7nFrXyi0A.woff2) format('woff2');
+    unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+  }
+  /* hebrew */
+  @font-face {
+    font-family: 'Rubik';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url(../fonts/iJWKBXyIfDnIV7nDrXyi0A.woff2) format('woff2');
+    unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F;
+  }
+  /* latin-ext */
+  @font-face {
+    font-family: 'Rubik';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url(../fonts/iJWKBXyIfDnIV7nPrXyi0A.woff2) format('woff2');
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  }
+  /* latin */
+  @font-face {
+    font-family: 'Rubik';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url(../fonts/iJWKBXyIfDnIV7nBrXw.woff2) format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  }
+  /* arabic */
+  @font-face {
+    font-family: 'Rubik';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url(../fonts/iJWKBXyIfDnIV7nErXyi0A.woff2) format('woff2');
+    unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC, U+102E0-102FB, U+10E60-10E7E, U+10EC2-10EC4, U+10EFC-10EFF, U+1EE00-1EE03, U+1EE05-1EE1F, U+1EE21-1EE22, U+1EE24, U+1EE27, U+1EE29-1EE32, U+1EE34-1EE37, U+1EE39, U+1EE3B, U+1EE42, U+1EE47, U+1EE49, U+1EE4B, U+1EE4D-1EE4F, U+1EE51-1EE52, U+1EE54, U+1EE57, U+1EE59, U+1EE5B, U+1EE5D, U+1EE5F, U+1EE61-1EE62, U+1EE64, U+1EE67-1EE6A, U+1EE6C-1EE72, U+1EE74-1EE77, U+1EE79-1EE7C, U+1EE7E, U+1EE80-1EE89, U+1EE8B-1EE9B, U+1EEA1-1EEA3, U+1EEA5-1EEA9, U+1EEAB-1EEBB, U+1EEF0-1EEF1;
+  }
+  /* cyrillic-ext */
+  @font-face {
+    font-family: 'Rubik';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url(../fonts/iJWKBXyIfDnIV7nMrXyi0A.woff2) format('woff2');
+    unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+  }
+  /* cyrillic */
+  @font-face {
+    font-family: 'Rubik';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url(../fonts/iJWKBXyIfDnIV7nFrXyi0A.woff2) format('woff2');
+    unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+  }
+  /* hebrew */
+  @font-face {
+    font-family: 'Rubik';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url(../fonts/iJWKBXyIfDnIV7nDrXyi0A.woff2) format('woff2');
+    unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F;
+  }
+  /* latin-ext */
+  @font-face {
+    font-family: 'Rubik';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url(../fonts/iJWKBXyIfDnIV7nPrXyi0A.woff2) format('woff2');
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  }
+  /* latin */
+  @font-face {
+    font-family: 'Rubik';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url(../fonts/iJWKBXyIfDnIV7nBrXw.woff2) format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  }
+
+/* latin-ext */
+@font-face {
+    font-family: 'Quicksand';
+    font-style: normal;
+    font-weight: 300;
+    font-display: swap;
+    src: url(../fonts/6xK-dSZaM9iE8KbpRA_LJ3z8mH9BOJvgkKEo58i-wi40.woff2) format('woff2');
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+  /* latin */
+@font-face {
+  font-family: 'Quicksand';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url(../fonts/6xK-dSZaM9iE8KbpRA_LJ3z8mH9BOJvgkKEo58a-wg.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+::-webkit-scrollbar {
+  display: none;
+}
+
+
+*{
+  font-family: 'Rubik',sans-serif;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+
+.ns-02 > h3{
+  transition: color 0.3s;
+}
+.ns-02:hover > h3{
+  color: #1DB954;
+}
+
+.cm-47,
+.cm-47 > img {
+  transition: 0.3s;
+  filter: invert(0%);
+}
+
+.cm-47:hover {
+  border-color: #1DB954 !important;
+  border-radius: 25px !important;
+}
+
+.cm-47:hover > img{
+  filter: brightness(0) saturate(100%) invert(49%) sepia(66%) saturate(575%) hue-rotate(88deg) brightness(102%) contrast(87%);
+  opacity: 1 !important;
+}
+
+.cm-47 > input::placeholder {
+  color: #ddd;
+}
+
+.ms-21 > p{
+  transition: 0.3s;
+}
+
+.nf-73:hover{
+  background-color: rgba(0,0,0,0.3);
+}
+
+.ls-49{
+  animation: goDown 0.2s ease-in-out;
+}
+
+.ls-48{
+  animation: goUp 0.2s ease-in-out;
+  transform: translateY(-100%)
+}
+
+
+@keyframes goUp {
+  0%{
+    transform: translateY(0%);
+  }
+  100%{
+    transform: translateY(-100%);
+  }
+}
+
+@keyframes goDown {
+  0%{
+    transform: translateY(-100%);
+  }
+  100%{
+    transform: translateY(0%);
+  }
+}
+
+@keyframes goInputUp {
+  0%{
+    transform: translateY(calc(100% + 10px));
+  }
+  100%{
+    transform: translateY(10px);
+  }
+}
+
+@keyframes goInputDown {
+  0%{
+    transform: translateY(10px);
+  }
+  100%{
+    transform: translateY(calc(100% + 10px));
+  }
+}
+
+.message-input.open{
+  animation: goInputUp 0.2s ease-in-out;
+}
+
+.message-input.close{
+  animation: goInputDown 0.2s ease-in-out;
+  transform: translateY(calc(100% + 10px));
+}
+
+.message-input > input::placeholder{
+  color: #aaa;
+}
+
+.message-input > div > .send > p{
+  transition: 0.3s;
+  max-width: 0px;
+  margin-right: 0px;
+}
+
+.message-input > div > .send:hover > p{
+  max-width: 200px;
+  margin-right: 5px;
+}
+
+.message-input .reply{
+  animation: replyPop 0.2s;
+}
+
+@keyframes replyPop {
+  0%{
+    margin: 0;
+    max-height: 0;
+  }
+  100%{
+    margin: 5px 0 10px 0;
+    max-height: 60px;
+  }
+}
+
+
+.message{
+  max-width:320px;
+}
+
+
+/* 
+@keyframes message-pop-mine {
+  0%{
+    padding: 0 !important;
+    max-width: 0;
+    white-space: nowrap;
+    clip-path: inset(0px 0px 0px 0px);
+  }
+  99.9%{
+    clip-path: inset(0px 0px 0px 0px);
+  }
+  100%{
+    max-width:320px;
+    padding: 10px 14px;
+    white-space: wrap;
+    clip-path: inset(0px 0px 0px -40px);
+  }
+}
+
+@keyframes message-pop-hes {
+  0%{
+    padding: 0 !important;
+    max-width: 0;
+    white-space: nowrap;
+    clip-path: inset(0px 0px 0px 0px);
+  }
+  99.9%{
+    clip-path: inset(0px 0px 0px 0px);
+  }
+  100%{
+    max-width:320px;
+    padding: 10px 14px;
+    white-space: wrap;
+    clip-path: inset(0px -40px 0px 0px);
+  }
+} */
+
+@keyframes message-pop-mine-new {
+  0%{
+    padding: 0 !important;
+    max-height: 0;
+    max-width: 0;
+    white-space: nowrap;
+    clip-path: inset(0px 0px 0px 0px);
+  }
+  99.9%{
+    clip-path: inset(0px 0px 0px 0px);
+  }
+  100%{
+    max-width: 320px;
+    /* max-height:500px; */
+    padding: 10px 14px;
+    white-space: wrap;
+    clip-path: inset(0px 0px 0px -40px);
+  }
+}
+
+@keyframes message-pop-hes-new {
+  0%{
+    padding: 0 !important;
+    max-height: 0;
+    white-space: nowrap;
+    clip-path: inset(0px 0px 0px 0px);
+  }
+  99.9%{
+    clip-path: inset(0px 0px 0px 0px);
+  }
+  100%{
+    max-height:500px;
+    padding: 10px 14px;
+    white-space: wrap;
+    clip-path: inset(0px -40px 0px 0px);
+  }
+}
+
+/* .message > p {
+  animation: messages-fadein 0.4s;
+}
+
+@keyframes messages-fadein {
+  0%{
+    opacity: 0;
+  }
+  80%{
+    opacity: 0;
+  }
+  100%{
+    opacity: 1;
+  }
+} */
+
+.messages-container{
+  animation: fadein 0.3s;
+}
+
+
+.message.mine.old{
+  clip-path: inset(0px 0px 0px -40px);
+  /* animation: message-pop-mine 0.3s; */
+
+}
+
+.message.hes.old{
+  clip-path: inset(0px -40px 0px 0px);
+  /* animation: message-pop-hes 0.3s; */
+}
+
+
+.message.mine.new{
+  clip-path: inset(0px 0px 0px -40px);
+  animation: message-pop-mine-new 0.3s;
+
+}
+
+.message.hes.new{
+  clip-path: inset(0px -40px 0px 0px);
+  animation: message-pop-hes-new 0.3s;
+}
+
+.message.mine > .time{
+  left: 0;
+  transform: translateX(calc(-100% - 10px));
+  transition: opacity 0.3s;
+}
+
+.message.hes > .reply-btn{
+  filter: brightness(0) saturate(100%) invert(49%) sepia(66%) saturate(575%) hue-rotate(88deg) brightness(102%) contrast(87%);
+}
+
+.message > .reply-btn{
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.message:hover > .reply-btn{
+  opacity: 1;
+}
+
+.message:hover > .time{
+  opacity: 0;
+}
+
+
+
+.message.hes > .time{
+  right: 0;
+  transform: translateX(calc(100% + 10px));
+  transition: opacity 0.3s;
+}
+
+
+
+.front-banner{
+  animation: fadein 0.3s;
+}
+
+@keyframes fadein{
+  0%{
+    opacity: 0;
+  }
+  100%{
+    opacity: 1;
+  }
+}
+
+.settings > div{
+  transition: background-color 0.3s;
+}
+
+
+.settings > div:hover{
+  background-color: #00000023;
+}
+
+/* .settings img{
+  filter: brightness(0) saturate(100%) invert(49%) sepia(66%) saturate(575%) hue-rotate(88deg) brightness(102%) contrast(87%);
+} */
+
+.search-friends{
+  animation: fadein 0.3s;
+}
