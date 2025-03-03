@@ -80,7 +80,7 @@ type DumbChatType = {
     
 }
 
-type Typer = {
+export type Typer = {
     typerId: string,
     chatId: string,
     isTyping: boolean
@@ -95,6 +95,8 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
         status: string;
         username: string;
         verified: boolean;
+        avatar: string;
+        bio:string;
     };
 
     type UserSearch = {
@@ -124,6 +126,7 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
     const selectedChatRef = useRef<ChatType | null>(null)
 
     const [openSearch,setOpenSearch] = React.useState(false)
+    const [openAccount,setOpenAccount] = React.useState(false)
     const [searchUsers,setSearchUsers] = React.useState("")
     const [foundUsers,setFoundUsers] = React.useState<UserSearch[]>([])
     const [notifs,setNotifs] = React.useState<Notif[]>([])
@@ -132,6 +135,8 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
     const [outsideMessage,setOutsideMessage] = React.useState<ReplyType | null>(null)
     const [isTyping, setIsTyping] = React.useState(false);
     const [typer, setTyper] = React.useState<Typer | null>(null);
+    const [selectedImage,setSelectedImage] = React.useState<string | null>(null)
+    const [userStatus,setUserStatus] = React.useState(false)
     
     const customNotif = (msg : string,color : string) => {
         setNotifs(prev=> [{text:msg,color:color},...prev])
@@ -209,7 +214,12 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
         console.log(token)
         axios.get(`http://${host}:${port}/api/users`,{headers:{'Authorization':`Bearer ${token}`}}).then((res)=>{
             if (res.status === 200) {
-                setUser(res.data.user)
+                
+                axios.get(`http://${host}:${port}/api/download/images?imageId=${encodeURIComponent(res.data.user.avatar)}`,{headers:{'Authorization':`Bearer ${token}`}}).then((res1)=>{
+                    setUser({...res.data.user,avatar:res1.data.url})
+                }).catch((err)=>{
+                    console.log(err)
+                })
                 axios.get(`http://${host}:${port}/api/chats`,{headers:{'Authorization':`Bearer ${token}`}}).then((res1)=>{
                     if (res1.status === 200) {
                         // console.log(res1.data.chats.map((chat : DumbChatType)=> ({id:chat.id,last_message:chat.last_message,status:chat.status,number:0,user:chat.user1.id === res.data.user.id?chat.user2:chat.user1})))
@@ -275,9 +285,10 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
             if (res1.status === 200) {
                 // console.log(res1.data.chats.map((chat : DumbChatType)=> ({id:chat.id,last_message:chat.last_message,status:chat.status,number:0,user:chat.user1.id === user?.id?chat.user2:chat.user1})))
                 const fr = res1.data.chats.find((chat : DumbChatType)=> chat.id === id)
-                setFriends(prev=> [...prev,{id:fr.id,last_message:fr.last_message,status:fr.status,number:0,user:fr.user1.id === user?.id?fr.user2:fr.user1}])
-                friendsRef.current = [...friendsRef.current,fr]
-                getFriendsImages(friendsRef.current)
+                const parsedFr = {id:fr.id,last_message:fr.last_message,status:fr.status,number:0,user:fr.user1.id === user?.id?fr.user2:fr.user1}
+                setFriends(prev=> [parsedFr,...prev])
+                friendsRef.current = [parsedFr,...friendsRef.current]
+                getFriendsImages([parsedFr,...friendsRef.current])
 
             }
         }).catch((res)=>{
@@ -327,6 +338,12 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
             console.log(res.data.messages)
             if (res.status === 200) {
                 setMessages(res.data.messages)
+                axios.get(`http://${host}:${port}/api/users/status?userId=${friend.user.id}`,{headers:{'Authorization':`Bearer ${token}`}}).then((res1)=>{
+                    console.log(res1)
+                    setUserStatus(true)
+                }).catch(()=>{
+
+                })
             }
         }).catch((err)=>{
             console.error(err)
@@ -343,10 +360,22 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
         if (type === 0) {
             setOpenSearch(!openSearch);
             setOpenSettings(false);
+            setOpenAccount(false);
         }else if(type === 1){
+            setOpenAccount(false);
             setOpenSearch(false);
             setOpenSettings(!openSettings);
         }
+        else if(type === 2){
+            setOpenAccount(!openAccount);
+            setOpenSearch(false);
+            setOpenSettings(false);
+        }
+    }
+
+    const viewAccount = () =>{
+        setOpenAccount(true)
+        setOpenSettings(false)
     }
 
 
@@ -363,7 +392,7 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
             })
         }
         
-        <div style={{width:'100%',height:'100%',display:'flex',flexDirection:'row',alignItems:'center',justifyContent:'start'}}>
+        <div style={{width:'100%',height:'100%',display:'flex',flexDirection:'row',alignItems:'center',justifyContent:'start',overflow:'hidden'}}>
             <div style={{height:'100%',width:'50%',position:'relative',zIndex:11,maxWidth:350,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:"start",backgroundColor:'#393939'}} >
                 <img onClick={()=>openOneBanner(0)} src='/assets/imgs/addUser.svg' style={{cursor:'pointer',position:'absolute',top:15,right:45,height:30}} />
                 <img onClick={()=>openOneBanner(1)} src='/assets/imgs/settings.svg' style={{cursor:'pointer',position:'absolute',top:15,right:10,height:30}} />
@@ -378,18 +407,22 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
                     <p onClick={()=>setFilterType(1)} style={{fontWeight:'lighter',margin:'0 5px',color:'white',cursor:'pointer',backgroundColor:filterType === 1?'#1DB954':'#1db95425',padding:'4px 10px',borderRadius:20}} >Read</p>
                     <p onClick={()=>setFilterType(2)} style={{fontWeight:'lighter',margin:'0 5px',color:'white',cursor:'pointer',backgroundColor:filterType === 2?'#1DB954':'#1db95425',padding:'4px 10px',borderRadius:20}} >Unread</p>
                 </div>
-                <div style={{height:'calc(100% - 107px)',width:'100%',overflowY:'scroll'}} >
+                {selectedImage?<div onClick={()=>setSelectedImage(null)} className='front-banner' style={{width:'100%',height:'calc(100% - 107px)',position:'absolute',top:137,left:0,backdropFilter:'blur(5px)',background:'rgba(0, 0, 0, 0.3)',zIndex:4,display:'flex',alignItems:'center',justifyContent:'center'}} >
+                        <img src={selectedImage} style={{width:'50%',borderRadius:'100%'}} />
+                </div>:null}
+                <div style={{height:'calc(100% - 107px)',width:'100%',overflowY:'scroll',position:'relative'}} >
+                    
                     {friends.filter((friend)=>friend.user.username.trim().toLocaleLowerCase().includes(searchFriends.toLocaleLowerCase()) && (filterType === 0 || (filterType === 2 && friend.last_message && friend.last_message.new) || (filterType === 1 && friend.last_message && !friend.last_message.new))).map((friend,i)=>{
                             return(
                                 <div onClick={()=>{selectChat(friend)}} className='nf-73' style={{height:70,transition:'0.3s',cursor:'pointer',width:'100%',display:'flex',alignItems:'center',justifyContent:'start',padding:'0 10px',position:'relative',boxSizing:'border-box'}} >
                                     {friend.last_message && friend.last_message.new?<div style={{position:'absolute',top:15,right:15,backgroundColor:'#1DB954',height:10,width:10,borderRadius:10}} ></div>:null}
                                     {i!=0?<div style={{height:2,width:'80%',borderRadius:4,backgroundColor:'#666',position:"absolute",top:-1,left:'50%',transform:'translateX(-50%)'}} ></div>:null}
-                                    <img src={friend.user.avatar} style={{height:45,width:45,borderRadius:25}}/>
+                                    <img onClick={()=>setSelectedImage(friend.user.avatar)} src={friend.user.avatar} style={{height:45,width:45,borderRadius:25}}/>
                                     <div style={{width:'calc(100% - 55px)',display:'flex',flexDirection:'column',alignItems:'start',justifyContent:'center',boxSizing:'border-box'}} >
                                         <p style={{width:'100%',fontWeight:'500',fontSize:18,margin:'0 5px',color:'white',cursor:'pointer',padding:'4px 10px',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}} ><span style={{color:'#1DB954',fontSize:20}} ># </span>{friend.user.username}</p>
                                         {/* <p style={{width:'calc(100% - 65px)',fontWeight:'lighter',margin:'0 5px',fontSize:14,color:'white',cursor:'pointer',padding:'0px 10px',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}} ><span style={{color:friend.number?"#1DB954":"white"}}>{friend.last_message?.content}</span></p> */}
                                         {!friend.number && !friend.last_message && (typer && typer.chatId !== friend.id || !typer)?<p style={{color:friend.status?'#1DB954':'#999',fontWeight:500,fontSize:13,margin:'0 0 0 15px',cursor:'default',height:18}} >{friend.status?'Online':'Offline'}</p>:null}
-                                        {!typer && friend.last_message?<p style={{color:'#999',fontWeight:500,fontSize:13,margin:'0 0 0 15px',cursor:'default',width:'100%',textOverflow:'ellipsis',whiteSpace:'nowrap',overflow:'hidden',height:18}} >{friend.last_message.userId === user?.id?'you':'text'} : <span style={{color:'#1DB954',fontSize:15}} >{friend.last_message.content}</span></p>:null}
+                                        {(typer && typer.chatId !== friend.id || !typer) && friend.last_message?<p style={{color:'#999',fontWeight:500,fontSize:13,margin:'0 0 0 15px',cursor:'default',width:'100%',textOverflow:'ellipsis',whiteSpace:'nowrap',overflow:'hidden',height:18}} >{friend.last_message.userId === user?.id?'you':'text'} : <span style={{color:'#1DB954',fontSize:15}} >{friend.last_message.content}</span></p>:null}
                                         {typer && typer.chatId === friend.id?<p className='dot-holder' style={{color:'#1DB954',fontWeight:'500',textAlign:'center',fontSize:15,margin:'0 0 0 15px',display:'flex',height:18,flexDirection:'row',alignItems:"center",justifyContent:'center'}} >Typing<p className='dot one' >.</p><p className='dot two' >.</p><p className='dot three' >.</p></p>:null}
                                         
                                         
@@ -415,9 +448,9 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
                 <div style={{width:'100%',cursor:'pointer',display:'flex',flexDirection:"row",alignItems:'center',justifyContent:"center",padding:'10px 0'}} >
                     <p style={{color:'#1DB954',margin:'0 0 0 6px'}} >Terms & Services</p>
                 </div>
-                <div style={{width:'100%',cursor:'pointer',display:'flex',flexDirection:"row",alignItems:'center',justifyContent:"center",padding:'10px 0'}} >
-                    <img src="/assets/imgs/themes.svg" style={{height:25,opacity:0.5}} />
-                    <p style={{color:'white',margin:'0 0 0 6px'}} >Themes</p>
+                <div onClick={()=>openOneBanner(2)} style={{width:'100%',cursor:'pointer',display:'flex',flexDirection:"row",alignItems:'center',justifyContent:"center",padding:'10px 0'}} >
+                    <img src="/assets/imgs/profile.svg" style={{height:25,opacity:0.5}} />
+                    <p style={{color:'white',margin:'0 0 0 6px'}} >Account</p>
                 </div>
                 <div style={{width:'100%',cursor:'pointer',display:'flex',flexDirection:"row",alignItems:'center',justifyContent:"center",padding:'10px 0'}} >
                     <img src="/assets/imgs/settings1.svg" style={{height:25,opacity:0.5}} />
@@ -454,14 +487,62 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
                 {foundUsers.length === 0 && searchUsers.trim() === "" ?<p style={{color:'white',width:'100%',textAlign:'center',fontSize:17,margin:'0px 0 0 -15px'}} >Search for new friends</p>:null}
             </div>
 
+            <div style={{position:'absolute',zIndex:10,width:'50%',maxWidth:350,height:'100%',padding:30,boxSizing:'border-box',backgroundColor:'#252525',left:0,overflowY:'scroll',transform:!openAccount?'translateX(0%)':'translateX(100%)',top:0,transition:'0.2s ease-in-out',borderRadius:'0 0 2px 0',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'start'}} >
+                <img onClick={()=>openOneBanner(2)} src="/assets/imgs/arrow.svg" style={{height:36,cursor:'pointer',position:'absolute',left:18,top:10}} />
+                <img src={user?.avatar} style={{width:'40%',borderRadius:'100%'}} />
+                <p style={{color:'#999',alignSelf:'start',fontSize:15,marginTop:50,}} >Email </p>
+                <input
+                    value={user?.email}
+                    placeholder="Email"
+                    disabled
+                    style={{
+                        width: "100%",
+                        padding: "11px 18px",
+                        marginBottom: 20,
+                        borderRadius: 8,
+                        border: "1px solid #333",
+                        backgroundColor: "#2A2A2A",
+                        color: "#E0E0E0",
+                        boxSizing:'border-box',
+                        fontWeight:500,fontSize:14
+                    }}
+                />
+                <p style={{color:'#999',alignSelf:'start',fontSize:15,marginTop:0,}} >Username </p>
+                <div style={{display:'flex',flexDirection:'row',alignItems:'center',justifyContent:'start',padding: "11px 18px",boxSizing:'border-box',border: "1px solid #333",backgroundColor: "#2A2A2A",borderRadius: 8,width:'100%'}} >
+                    <p style={{color:'#1DB954',fontSize:18,margin:0}} ># </p>
+                    <input disabled value={user?.username} style={{color: "#E0E0E0",border:0,backgroundColor: "#2A2A2A",outline:'none',marginLeft:10,fontWeight:500,fontSize:15,width:'calc(100% - 30px)'}} ></input>
+                </div>
+                <p style={{color:'#999',alignSelf:'start',fontSize:15,marginTop:20,}} >Bio </p>
+
+                <textarea
+                    value={user?.bio}
+                    placeholder="Email"
+                    disabled
+                    style={{
+                        width: "100%",
+                        height:120,
+                        minHeight:120,
+                        padding: "11px 18px",
+                        marginBottom: 20,
+                        borderRadius: 8,
+                        border: "1px solid #333",
+                        backgroundColor: "#2A2A2A",
+                        color: "#E0E0E0",
+                        boxSizing:'border-box',
+                        fontWeight:500,fontSize:14,
+                        resize:'none'
+                    }}
+                />
+            </div>
+
 
 
             {/* INSIDE */}
             {/* INSIDE */}
             {/* INSIDE */}
 
-
-            <Chat ref={chatRef} selectedChatRef={selectedChatRef} socket={sockett} selectedChat={selectedChat} setSelectedChat={setSelectedChat} initialMessages={messages} userId={user?.id} chatRemoved={chatRemoved} setChatRemoved={setChatRemoved} setFriends={setFriends} setIsTyping={setIsTyping} isTyping={isTyping} />
+            
+            <Chat ref={chatRef} selectedChatRef={selectedChatRef} typer={typer} socket={sockett} selectedChat={selectedChat} setSelectedChat={setSelectedChat} initialMessages={messages} userId={user?.id} chatRemoved={chatRemoved} setChatRemoved={setChatRemoved} setFriends={setFriends} setIsTyping={setIsTyping} isTyping={isTyping} />
 
         </div>
     </div>

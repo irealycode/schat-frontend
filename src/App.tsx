@@ -6,6 +6,7 @@ import Login from './Login/Login';
 import Register from './Register/Register';
 import HomeRouter from './Home/HomeRouter';
 import Verify from './Verify/Verify';
+import Reverify from './Register/Reverify/Reverify';
 
 
 
@@ -35,6 +36,7 @@ const App: React.FC = () => {
         <Route path="/home" element={<PageWrapper><HomeRouter /></PageWrapper>} />
         <Route path="/login" element={<PageWrapper><Login /></PageWrapper>} />
         <Route path="/verify" element={<PageWrapper><Verify /></PageWrapper>} />
+        <Route path="/reverify" element={<PageWrapper><Reverify /></PageWrapper>} />
         <Route path="/register/:email?" element={<PageWrapper><Register /></PageWrapper>} />
 
         

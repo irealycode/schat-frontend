@@ -1,6 +1,6 @@
 import React, {forwardRef, useImperativeHandle, useRef} from 'react';
 import { Route, BrowserRouter, Routes } from 'react-router-dom';
-import { ChatType, ReceivedMessage, ReplyType, TallMessage, UserType } from './HomeLogged';
+import { ChatType, ReceivedMessage, ReplyType, TallMessage, Typer, UserType } from './HomeLogged';
 import { Socket } from 'socket.io-client';
 
 
@@ -32,6 +32,7 @@ interface ChatComponentProps {
     setIsTyping: React.Dispatch<React.SetStateAction<boolean>>;
     isTyping: boolean;
     selectedChatRef:React.RefObject<ChatType | null>;
+    typer: Typer | null;
 }
 
 export interface sendRefComp{
@@ -43,7 +44,7 @@ interface sendProps {
     msg : string;
 }
 
-const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({socket,selectedChatRef,selectedChat,userId,chatRemoved,initialMessages,isTyping,setChatRemoved,setSelectedChat,setFriends,setIsTyping} : ChatComponentProps,ref) {
+const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({socket,selectedChatRef,selectedChat,userId,chatRemoved,initialMessages,isTyping,typer,setChatRemoved,setSelectedChat,setFriends,setIsTyping} : ChatComponentProps,ref) {
 
     useImperativeHandle(ref ,() =>({
         sendFriendsMessage(msg){
@@ -191,10 +192,11 @@ const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({sock
         <div style={{height:'100%',width:'calc(100% - 350px)',minWidth:'50%',position:'relative',}} >
                 {selectedChat?<div className={chatRemoved?'ls-48':'ls-49'} style={{height:60,width:'100%',backgroundColor:'#393939',display:'flex',flexDirection:'row',alignItems:'center',justifyContent:'start'}} >
                     <div style={{height:'100%',width:'100%',display:'flex',flexDirection:'row',alignItems:'center',justifyContent:'start'}} >
-                        <img onClick={()=>removeChat()} src="/assets/imgs/arrow.svg" style={{height:'5vh',cursor:'pointer'}} />
+                        <img onClick={()=>removeChat()} src="/assets/imgs/arrow.svg" style={{height:36,cursor:'pointer'}} />
                         <div style={{width:'calc(100% - 5vh)',height:'100%',display:'flex',flexDirection:'column',alignItems:'start',justifyContent:'center'}} >
-                            <p style={{width:'100%',color:'white',fontWeight:500,fontSize:'clamp(0px,4vh,27px)',margin:0,cursor:'default',whiteSpace:"nowrap",overflow:'hidden',textOverflow:'ellipsis'}} ><span style={{color:'#1DB954'}} ># </span>{selectedChat?.user.username}</p>
-                            <p style={{color:selectedChat.status?'#1DB954':'#999',fontWeight:500,fontSize:'clamp(0px,2vh,14px)',margin:0,cursor:'default'}} >{selectedChat.status?'Online':'Offline'}</p>
+                            <p style={{width:'100%',color:'white',fontWeight:500,fontSize:26,margin:0,cursor:'default',whiteSpace:"nowrap",overflow:'hidden',textOverflow:'ellipsis'}} ><span style={{color:'#1DB954'}} ># </span>{selectedChat?.user.username}</p>
+                            {(typer && typer.chatId !== selectedChat.id || !typer)?<p style={{color:selectedChat.status?'#1DB954':'#999',fontWeight:500,fontSize:14,margin:0,cursor:'default'}} >{selectedChat.status?'Online':'Offline'}</p>:null}
+                            {typer && typer.chatId === selectedChat.id?<p className='dot-holder' style={{color:'#1DB954',fontWeight:'500',textAlign:'center',fontSize:14,margin:0,display:'flex',height:16.67,flexDirection:'row',alignItems:"center",justifyContent:'center'}} >Typing<p className='dot one' >.</p><p className='dot two' >.</p><p className='dot three' >.</p></p>:null}
                         </div>
                     </div>
                 </div>:null}
