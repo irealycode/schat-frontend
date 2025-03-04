@@ -86,7 +86,7 @@ export type Typer = {
     isTyping: boolean
 }
 
-
+const width = window.innerWidth
 const HomeLogged: React.FC<HomeProps> = ({token}) => {
     
     type MainUserType = {
@@ -137,6 +137,7 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
     const [typer, setTyper] = React.useState<Typer | null>(null);
     const [selectedImage,setSelectedImage] = React.useState<string | null>(null)
     const [userStatus,setUserStatus] = React.useState("")
+    const [loadingUsers,setLoadingUsers] = React.useState(false)
     
     const customNotif = (msg : string,color : string) => {
         setNotifs(prev=> [{text:msg,color:color},...prev])
@@ -257,13 +258,17 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
 
     const searchUserFunc = (user : string) => {
         setSearchUsers(user.trim())
+        setLoadingUsers(true)
         if (user.trim() === "") {
+            setLoadingUsers(false)
             setFoundUsers([])
             return
         }
         axios.get(`http://${host}:${port}/api/search/users?username=${user.trim()}`,{headers:{'Authorization':`Bearer ${token}`}}).then((res)=>{
+            setLoadingUsers(false)
             setFoundUsers(res.data.users)
         }).catch(()=>{
+            setLoadingUsers(false)
             setFoundUsers([])
         })
     }
@@ -382,7 +387,7 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
 
 
     return (
-    <div style={{backgroundColor: "#121212",color: "#E0E0E0",height: "100vh",display: "flex",flexDirection: "column",alignItems: "center"}}>
+    <div className='scale-d' style={{backgroundColor: "#121212",color: "#E0E0E0",height: "111.111111vh",width:'111.11111111vw',display: "flex",flexDirection: "column",alignItems: "center"}}>
 
         {
             notifs.map((err,i)=>{
@@ -443,7 +448,7 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
                 </div>
             </div>
             
-            <div className='settings' style={{position:'absolute',zIndex:4,width:200,backgroundColor:'#252525',left:350,transform:openSettings?'translateX(0%)':'translateX(-100%)',top:(!chatRemoved)?60:0,transition:'0.2s ease-in-out',borderRadius:'0 0 2px 0'}} >
+            <div className='settings' style={{position:'absolute',zIndex:4,width:'50%',maxWidth:200,backgroundColor:'#252525',left:0,transform:!openSettings?'translateX(0%)':`translateX(${(width/2)>350?'350px':`${(width/2)}px`})`,top:(!chatRemoved)?60:0,transition:'0.2s ease-in-out',borderRadius:'0 0 2px 0'}} >
                 <div style={{width:'100%',cursor:'pointer',display:'flex',flexDirection:"row",alignItems:'center',justifyContent:"center",padding:'10px 0'}} >
                     <p style={{color:'#1DB954',margin:'0 0 0 6px'}} >Privacy Policy</p>
                 </div>
@@ -481,12 +486,14 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
                         })
                     }
                 </div>
+
+                {loadingUsers?<img className='loading' src='/assets/imgs/loading.svg' style={{height:30,position:'absolute'}} />:null}
                 
-                {foundUsers.length === 0 && searchUsers.trim() !== "" ?<img className='fadein' src='/assets/imgs/ghost404.svg' style={{width:'40%'}} />:null}
-                {foundUsers.length === 0 && searchUsers.trim() !== "" ?<p className='fadein' style={{color:'white',width:'100%',textAlign:'center',fontSize:17,margin:'0px 0 0 -15px'}} >Can't find them.</p>:null}
+                {foundUsers.length === 0 && searchUsers.trim() !== "" && !loadingUsers ?<img className='fadein' src='/assets/imgs/ghost404.svg' style={{width:'40%'}} />:null}
+                {foundUsers.length === 0 && searchUsers.trim() !== "" && !loadingUsers ?<p className='fadein' style={{color:'white',width:'100%',textAlign:'center',fontSize:17,margin:'0px 0 0 -15px'}} >Can't find them.</p>:null}
 
                 {foundUsers.length === 0 && searchUsers.trim() === "" ?<img src='/assets/imgs/ghostLooking.svg' style={{width:'40%'}} />:null}
-                {foundUsers.length === 0 && searchUsers.trim() === "" ?<p style={{color:'white',width:'100%',textAlign:'center',fontSize:17,margin:'0px 0 0 -15px'}} >Search for new friends</p>:null}
+                {foundUsers.length === 0 && searchUsers.trim() === "" && !loadingUsers ?<p style={{color:'white',width:'100%',textAlign:'center',fontSize:17,margin:'0px 0 0 -15px'}} >Search for new friends</p>:null}
             </div>
 
             <div style={{position:'absolute',zIndex:10,width:'50%',maxWidth:350,height:'100%',padding:30,boxSizing:'border-box',backgroundColor:'#252525',left:0,overflowY:'scroll',transform:!openAccount?'translateX(0%)':'translateX(100%)',top:0,transition:'0.2s ease-in-out',borderRadius:'0 0 2px 0',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'start'}} >

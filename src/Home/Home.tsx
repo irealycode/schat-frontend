@@ -9,13 +9,13 @@ const Home: React.FC = () => {
       style={{
         backgroundColor: "#121212",
         color: "#E0E0E0",
-        height: "100vh",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "space-between",
         padding: "0",
         fontFamily: "Arial, sans-serif",
+        height: "111.111111vh",width:'111.11111111vw'
       }}
     >
       <header

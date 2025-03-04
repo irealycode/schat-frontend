@@ -70,7 +70,7 @@ const Reverify: React.FC = () => {
   return (
 
     
-    <div style={{ backgroundColor:"#121212",color:"#E0E0E0",minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding: 24,fontFamily:"Arial,sans-serif",boxSizing:"border-box" }}>
+    <div style={{ backgroundColor:"#121212",color:"#E0E0E0",minHeight:"111.111111vh",height: "111.111111vh",width:'111.11111111vw',display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding: 24,fontFamily:"Arial,sans-serif",boxSizing:"border-box" }}>
         
         {
             notifs.map((err,i)=>{
@@ -95,6 +95,19 @@ const Reverify: React.FC = () => {
                 Don’t have an account? <span style={{ color: "#1DB954", textDecoration: "none" }}>Sign Up</span>
             </p>
         </div>
+        <footer
+        style={{
+          width: "100%",
+          maxWidth: "1200px",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          marginTop: 24,
+          fontSize: 14,
+        }}
+      >
+        <p>© 2025 Chatify. All rights reserved.</p>
+      </footer>
     </div>
   );
 };

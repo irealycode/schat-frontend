@@ -54,14 +54,15 @@ const Login: React.FC = () => {
       style={{
         backgroundColor: "#121212",
         color: "#E0E0E0",
-        minHeight: "100vh",
+        minHeight: "111.11111111vh",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
         padding: 24,
         fontFamily: "Arial, sans-serif",
-        boxSizing:'border-box'
+        boxSizing:'border-box',
+        height: "111.111111vh",width:'111.11111111vw'
       }}
     >
 
