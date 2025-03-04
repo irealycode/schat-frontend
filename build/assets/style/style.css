@@ -191,6 +191,16 @@
   -ms-overflow-style: none;
 }
 
+body{
+  background-color: "#121212" !important;
+}
+/* .scale-d > *{
+  transform: scale(0.9);
+  transform-origin: top left;
+  width: 111.11%; 
+  height: 111.11%;
+} */
+
 
 .ns-02 > h3{
   transition: color 0.3s;

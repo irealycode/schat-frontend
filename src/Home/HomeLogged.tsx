@@ -138,6 +138,7 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
     const [selectedImage,setSelectedImage] = React.useState<string | null>(null)
     const [userStatus,setUserStatus] = React.useState("")
     const [loadingUsers,setLoadingUsers] = React.useState(false)
+    const [loadingFriends,setLoadingFriends] = React.useState(false)
     
     const customNotif = (msg : string,color : string) => {
         setNotifs(prev=> [{text:msg,color:color},...prev])
@@ -213,6 +214,7 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
 
     const getUser = () =>{
         console.log(token)
+        setLoadingFriends(true)
         axios.get(`http://${host}:${port}/api/users`,{headers:{'Authorization':`Bearer ${token}`}}).then((res)=>{
             if (res.status === 200) {
                 
@@ -222,6 +224,7 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
                     console.log(err)
                 })
                 axios.get(`http://${host}:${port}/api/chats`,{headers:{'Authorization':`Bearer ${token}`}}).then((res1)=>{
+                    setLoadingFriends(false)
                     if (res1.status === 200) {
                         // console.log(res1.data.chats.map((chat : DumbChatType)=> ({id:chat.id,last_message:chat.last_message,status:chat.status,number:0,user:chat.user1.id === res.data.user.id?chat.user2:chat.user1})))
                         const filteredFriends = res1.data.chats.map((chat : DumbChatType)=> ({id:chat.id,last_message:chat.last_message,status:chat.status,number:0,user:chat.user1.id === res.data.user.id?chat.user2:chat.user1}))
@@ -359,6 +362,7 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
         setSelectedChat(friend)
         selectedChatRef.current = friend
         setChatRemoved(false)
+        setOpenAccount(false)
         setOpenSearch(false)
     }
     
@@ -418,6 +422,7 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
                         <img src={selectedImage} style={{width:'50%',borderRadius:'100%'}} />
                 </div>:null}
                 <div style={{height:'calc(100% - 107px)',width:'100%',overflowY:'scroll',position:'relative'}} >
+
                     
                     {friends.filter((friend)=>friend.user.username.trim().toLocaleLowerCase().includes(searchFriends.toLocaleLowerCase()) && (filterType === 0 || (filterType === 2 && friend.last_message && friend.last_message.new) || (filterType === 1 && friend.last_message && !friend.last_message.new))).map((friend,i)=>{
                             return(
@@ -438,11 +443,13 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
                                 </div>
                             )
                     })}
-                    {friends.filter((friend)=>friend.user.username.trim().includes(searchFriends)).length === 0?
+                    {friends.filter((friend)=>friend.user.username.trim().includes(searchFriends)).length === 0 && !loadingFriends?
                     <div className='search-friends' style={{width:'100%',marginTop:20,display:'flex',flexDirection:"column",alignItems:"center",justifyContent:'center'}} >
                         <img src='/assets/imgs/ghost1.svg' style={{width:'35%',opacity:1}} />
                         <p style={{color:'#999',width:'100%',textAlign:'center',fontSize:17,margin:'-10px 0 0 -15px'}} >{searchFriends.trim() === ""?"You have no chats yet.":'No chats found.'}</p>
                     </div>:null}
+                    {loadingFriends?<img className='loading' src='/assets/imgs/loading.svg' style={{height:30,filter:'invert(30%)',alignSelf:'center',marginLeft:'calc(50% - 15px)',marginTop:50}} />:null}
+
 
                     
                 </div>
