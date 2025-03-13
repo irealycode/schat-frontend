@@ -87,6 +87,7 @@ export type Typer = {
 }
 
 const width = window.innerWidth
+const height = window.innerHeight
 const HomeLogged: React.FC<HomeProps> = ({token}) => {
     
     type MainUserType = {
@@ -112,7 +113,6 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
     
 
     
-    const user_id = "nsl2";
     const [filterType,setFilterType] = React.useState(0)
     const [user,setUser] = React.useState<MainUserType | null>(null)
     const [chatRemoved,setChatRemoved] = React.useState(true)
@@ -132,13 +132,13 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
     const [notifs,setNotifs] = React.useState<Notif[]>([])
     const [sockett,setSockett] = React.useState<Socket | null>(null)
     const chatRef = React.useRef<sendRefComp | null>(null)
-    const [outsideMessage,setOutsideMessage] = React.useState<ReplyType | null>(null)
     const [isTyping, setIsTyping] = React.useState(false);
     const [typer, setTyper] = React.useState<Typer | null>(null);
     const [selectedImage,setSelectedImage] = React.useState<string | null>(null)
     const [userStatus,setUserStatus] = React.useState("")
     const [loadingUsers,setLoadingUsers] = React.useState(false)
     const [loadingFriends,setLoadingFriends] = React.useState(false)
+    const isMobile = width < 769;
     
     const customNotif = (msg : string,color : string) => {
         setNotifs(prev=> [{text:msg,color:color},...prev])
@@ -391,7 +391,7 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
 
 
     return (
-    <div className='scale-d' style={{backgroundColor: "#121212",color: "#E0E0E0",height: "111.111111vh",width:'111.11111111vw',display: "flex",flexDirection: "column",alignItems: "center"}}>
+    <div className='scale-d' style={{backgroundColor: "#121212",color: "#E0E0E0",height: height,width:width,overflow:'hidden',display: "flex",flexDirection: "column",alignItems: "center"}}>
 
         {
             notifs.map((err,i)=>{
@@ -404,7 +404,7 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
         }
         
         <div style={{width:'100%',height:'100%',display:'flex',flexDirection:'row',alignItems:'center',justifyContent:'start',overflow:'hidden'}}>
-            <div style={{height:'100%',width:'50%',position:'relative',zIndex:11,maxWidth:350,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:"start",backgroundColor:'#393939'}} >
+            <div style={{height:'100%',width:isMobile?'100%':'50%',position:isMobile?'absolute':'relative',zIndex:isMobile?3:11,maxWidth:!isMobile?350:'100%',display:'flex',transform:selectedChat && isMobile?'translateX(-100%)':'translateX(0%)',transition:'0.3s',flexDirection:'column',alignItems:'center',justifyContent:"start",backgroundColor:'#393939'}} >
                 <img onClick={()=>openOneBanner(0)} src='/assets/imgs/addUser.svg' style={{cursor:'pointer',position:'absolute',top:15,right:45,height:30}} />
                 <img onClick={()=>openOneBanner(1)} src='/assets/imgs/settings.svg' style={{cursor:'pointer',position:'absolute',top:15,right:10,height:30}} />
                 <h1 style={{ color:"white",fontSize:30,margin:'10px 0 0 15px',alignSelf:'start',fontWeight:500,display:'flex',flexDirection:'row',alignItems:"center",justifyContent:'center',cursor:'default' }}>Ch<img src='/assets/imgs/chat.svg' style={{height:30,filter:'brightness(0) saturate(100%) invert(49%) sepia(66%) saturate(575%) hue-rotate(88deg) brightness(102%) contrast(87%)'}} />tify</h1>
@@ -455,7 +455,7 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
                 </div>
             </div>
             
-            <div className='settings' style={{position:'absolute',zIndex:4,width:'50%',maxWidth:200,backgroundColor:'#252525',left:0,transform:!openSettings?'translateX(0%)':`translateX(${(width/2)>350?'350px':`${(width/2)}px`})`,top:(!chatRemoved)?60:0,transition:'0.2s ease-in-out',borderRadius:'0 0 2px 0'}} >
+            <div className='settings' style={{position:'absolute',zIndex:4,width:isMobile?'100%':'50%',maxWidth:!isMobile?200:'100%',backgroundColor:'#252525',left:0,transform:!openSettings?!isMobile?'translateX(0%)':'translateX(-100%)':isMobile?'translateX(0%)':`translateX(${(width/2)>350?'350px':`${(width/2)}px`})`,top:(!chatRemoved)?60:isMobile?60:0,transition:'0.2s ease-in-out',borderRadius:'0 0 2px 0'}} >
                 <div style={{width:'100%',cursor:'pointer',display:'flex',flexDirection:"row",alignItems:'center',justifyContent:"center",padding:'10px 0'}} >
                     <p style={{color:'#1DB954',margin:'0 0 0 6px'}} >Privacy Policy</p>
                 </div>
@@ -476,8 +476,9 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
                 </div>
             </div>
 
-            <div style={{position:'absolute',zIndex:10,width:'50%',maxWidth:350,height:'100%',backgroundColor:'#252525',left:0,transform:!openSearch?'translateX(0%)':'translateX(100%)',top:0,transition:'0.2s ease-in-out',borderRadius:'0 0 2px 0',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center'}} >
-                <div className='cm-47' style={{width:'calc(100% - 30px)',position:'absolute',top:0,height:35,border:'2px solid #999',borderRadius:10,display:"flex",boxSizing:'border-box',alignItems:"center",justifyContent:"center",overflow:'hidden',padding:4,marginTop:15}} >
+            <div style={{position:'absolute',zIndex:10,width:isMobile?'100%':'50%',maxWidth:!isMobile?350:'100%',height:'100%',backgroundColor:'#252525',left:0,transform:!openSearch?!isMobile?'translateX(0%)':'translateX(-100%)':isMobile?'translateX(0%)':'translateX(100%)',top:0,transition:'0.2s ease-in-out',borderRadius:'0 0 2px 0',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center'}} >
+                <img onClick={()=>openOneBanner(0)} src="/assets/imgs/arrow.svg" style={{height:36,cursor:'pointer',position:'absolute',left:2,top:14}} />
+                <div className='cm-47' style={{width:'calc(100% - 50px)',position:'absolute',top:0,right:10,height:35,border:'2px solid #999',borderRadius:10,display:"flex",boxSizing:'border-box',alignItems:"center",justifyContent:"center",overflow:'hidden',padding:4,marginTop:15}} >
                     <img src='/assets/imgs/search.svg' style={{height:17,padding:3,opacity:0.7}} />
                     <input onChange={(event)=>searchUserFunc(event.target.value)} value={searchUsers}  placeholder='Search' style={{height:'calc(100% - 2px)',fontFamily:'Quicksand',fontWeight:'bolder',width:'calc(100% - 36px)',color:'white',outline:'none',marginLeft:10,padding:0,border:0,backgroundColor:"transparent",fontSize:15}} />
                 </div>
@@ -503,7 +504,7 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
                 {foundUsers.length === 0 && searchUsers.trim() === "" && !loadingUsers ?<p style={{color:'white',width:'100%',textAlign:'center',fontSize:17,margin:'0px 0 0 -15px'}} >Search for new friends</p>:null}
             </div>
 
-            <div style={{position:'absolute',zIndex:10,width:'50%',maxWidth:350,height:'100%',padding:30,boxSizing:'border-box',backgroundColor:'#252525',left:0,overflowY:'scroll',transform:!openAccount?'translateX(0%)':'translateX(100%)',top:0,transition:'0.2s ease-in-out',borderRadius:'0 0 2px 0',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'start'}} >
+            <div style={{position:'absolute',zIndex:10,width:isMobile?'100%':'50%',maxWidth:!isMobile?350:'100%',height:'100%',padding:30,boxSizing:'border-box',backgroundColor:'#252525',left:0,overflowY:'scroll',transform:!openAccount?!isMobile?'translateX(0%)':'translateX(-100%)':isMobile?'translateX(0%)':'translateX(100%)',top:0,transition:'0.2s ease-in-out',borderRadius:'0 0 2px 0',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'start'}} >
                 <img onClick={()=>openOneBanner(2)} src="/assets/imgs/arrow.svg" style={{height:36,cursor:'pointer',position:'absolute',left:18,top:10}} />
                 <img src={user?.avatar} style={{width:'40%',borderRadius:'100%'}} />
                 <p style={{color:'#999',alignSelf:'start',fontSize:15,marginTop:50,}} >Email </p>

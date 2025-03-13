@@ -221,7 +221,7 @@ const Register: React.FC = () => {
       
 
   return (
-    <div style={{ backgroundColor:"#121212",color:"#E0E0E0",minHeight:"111.1111111111vh",height: "111.111111vh",width:'111.11111111vw',display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding: 24,fontFamily:"Arial,sans-serif",boxSizing:"border-box" }}>
+    <div style={{ backgroundColor:"#121212",color:"#E0E0E0",minHeight:"111.1111111111vh",height: "100vh",width:'100vw',display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding: 24,fontFamily:"Arial,sans-serif",boxSizing:"border-box" }}>
         <header style={{ width:"100%",maxWidth:"1200px",display:"flex",justifyContent:"center",alignItems:"center",marginBottom: 24 }}>
             <h1 onClick={() => window.location.assign("/")} style={{ color:"white",fontSize: 35,margin: 0,fontWeight: 500,display:"flex",flexDirection:"row",alignItems:"center",justifyContent:"center",cursor:"pointer" }}>
             Ch<img src="/assets/imgs/chat.svg" style={{width:40,filter:"brightness(0) saturate(100%) invert(49%) sepia(66%) saturate(575%) hue-rotate(88deg) brightness(102%) contrast(87%)" }} />tify

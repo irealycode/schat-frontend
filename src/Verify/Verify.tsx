@@ -39,7 +39,7 @@ const Verify: React.FC = () => {
 
 
     return (
-        <div style={{backgroundColor: "#121212",color: "#E0E0E0",height: "111.111111vh",width:'111.11111111vw',display: "flex",flexDirection: "column",alignItems: "center",justifyContent:'center'}}>
+        <div style={{backgroundColor: "#121212",color: "#E0E0E0",height: "100vh",width:'100vw',display: "flex",flexDirection: "column",alignItems: "center",justifyContent:'center'}}>
             {/* <p style={{color:'white',fontWeight:'500',width:'100%',textAlign:'center',fontSize:'5vw',margin:0}} >404</p> */}
             <p className='dot-holder' style={{color:'white',fontWeight:'500',width:'100%',textAlign:'center',fontSize:'2vw',margin:0,display:'flex',flexDirection:'row',alignItems:"center",justifyContent:'center'}} >Verifying<p className='dot one' >.</p><p className='dot two' >.</p><p className='dot three' >.</p></p>
             {/* <img src='/assets/imgs/ghostLooking.svg' style={{width:'15vw',margin:'0 0 0 2vw'}} /> */}

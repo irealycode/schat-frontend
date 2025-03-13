@@ -18,7 +18,7 @@ interface TransProps {
 
 const PageWrapper : React.FC<TransProps> = ({children}) => {
     return(
-      <div style={{backgroundColor:"#121212",height: "111.111111vh",width:'111.11111111vw'}} >
+      <div style={{backgroundColor:"#121212",height: "100vh",width:'100vw'}} >
         <motion.div style={{backgroundColor:"#121212"}}  initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} transition={{duration:1}} >
           {children}
         </motion.div>

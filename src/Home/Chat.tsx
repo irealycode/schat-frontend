@@ -44,6 +44,7 @@ export interface sendRefComp{
 interface sendProps {
     msg : string;
 }
+const width = window.innerWidth
 
 const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({socket,selectedChatRef,selectedChat,userId,chatRemoved,initialMessages,isTyping,typer,userStatus,setChatRemoved,setSelectedChat,setFriends,setIsTyping} : ChatComponentProps,ref) {
 
@@ -63,6 +64,7 @@ const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({sock
     const [messageInput,setMessageInput] = React.useState("")
     const [isInputFocused, setIsInputFocused] = React.useState(false);
     const inputRef = useRef<HTMLInputElement | null>(null);
+    const isMobile = width < 769;
 
     
     
@@ -215,7 +217,7 @@ const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({sock
 
     
     return(
-        <div style={{height:'100%',width:'calc(100% - 350px)',minWidth:'50%',position:'relative',}} >
+        <div style={{height:'100%',overflow:'hidden',width:'calc(100% - 350px)',minWidth:isMobile?'100%':'50%',position:'relative',}} >
                 {selectedChat?<div className={chatRemoved?'ls-48':'ls-49'} style={{height:60,width:'100%',backgroundColor:'#393939',display:'flex',flexDirection:'row',alignItems:'center',justifyContent:'start'}} >
                     <div style={{height:'100%',width:'100%',display:'flex',flexDirection:'row',alignItems:'center',justifyContent:'start'}} >
                         <img onClick={()=>removeChat()} src="/assets/imgs/arrow.svg" style={{height:36,cursor:'pointer'}} />

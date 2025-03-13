@@ -70,7 +70,7 @@ const Reverify: React.FC = () => {
   return (
 
     
-    <div style={{ backgroundColor:"#121212",color:"#E0E0E0",minHeight:"111.111111vh",height: "111.111111vh",width:'111.11111111vw',display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding: 24,fontFamily:"Arial,sans-serif",boxSizing:"border-box" }}>
+    <div style={{ backgroundColor:"#121212",color:"#E0E0E0",minHeight:"111.111111vh",height: "100vh",width:'100vw',display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding: 24,fontFamily:"Arial,sans-serif",boxSizing:"border-box" }}>
         
         {
             notifs.map((err,i)=>{

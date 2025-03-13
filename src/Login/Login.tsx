@@ -62,7 +62,7 @@ const Login: React.FC = () => {
         padding: 24,
         fontFamily: "Arial, sans-serif",
         boxSizing:'border-box',
-        height: "111.111111vh",width:'111.11111111vw'
+        height: "100vh",width:'100vw'
       }}
     >
 
@@ -94,7 +94,7 @@ const Login: React.FC = () => {
         style={{
           textAlign: "center",
           maxWidth: "400px",
-          width: "100%",
+          width: "calc(100% - 20px)",
           backgroundColor: "#1E1E1E",
           padding: 24,
           borderRadius: "8px",

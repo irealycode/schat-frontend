@@ -15,7 +15,7 @@ const Home: React.FC = () => {
         justifyContent: "space-between",
         padding: "0",
         fontFamily: "Arial, sans-serif",
-        height: "111.111111vh",width:'111.11111111vw'
+        height: "100vh",width:'100vw'
       }}
     >
       <header
@@ -52,15 +52,15 @@ const Home: React.FC = () => {
         style={{
           textAlign: "center",
           marginTop: "5rem",
-          maxWidth: "800px",
+          maxWidth: "calc(100% - 40px)",
         }}
       >
-        <h2 style={{ fontSize: "3rem", fontWeight: "bold", marginBottom: 16 }}>
-          Seamless Conversations. Anytime, Anywhere.
+        <h2 style={{ fontSize: "clamp(25px,5vw,50px)", fontWeight: "bold", marginBottom: 16 }}>
+          Seamless Conversations.<br/> Anytime, Anywhere.
         </h2>
-        <p style={{ fontSize: "1.25rem", marginBottom: "2rem" }}>
+        <p style={{ fontSize: "clamp(13px,3vw,20px)", marginBottom: "2rem" }}>
           Connect with friends and colleagues with our fast, secure, and modern
-          chat app. Join millions who trust Chatify for their conversations.
+          chat app.<br/>  Join millions who trust Chatify for their conversations.
         </p>
         <input
           onChange={(event)=>setEmail(event.target.value)}
@@ -68,7 +68,7 @@ const Home: React.FC = () => {
           type="email"
           placeholder="Enter your email to get started"
           style={{
-            width: "100%",
+            width: "calc(100% - 40px)",
             maxWidth: "400px",
             padding: "12px 18px",
             margin: '0 0 16px 0',
