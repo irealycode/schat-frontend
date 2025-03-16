@@ -311,6 +311,10 @@ body{
   animation: replyPop 0.2s;
 }
 
+.message-input .image{
+  animation: imagePop 0.2s;
+}
+
 @keyframes replyPop {
   0%{
     margin: 0;
@@ -323,9 +327,18 @@ body{
 }
 
 
-.message{
-  max-width:320px;
+@keyframes imagePop {
+  0%{
+    margin: 0;
+    max-height: 0;
+  }
+  100%{
+    margin: 5px 0 10px 0;
+    max-height: 100px;
+  }
 }
+
+
 
 
 /* 

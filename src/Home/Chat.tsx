@@ -37,6 +37,7 @@ interface ChatComponentProps {
     typer: Typer | null;
     userStatus: string;
     block: () => void;
+    token: string;
 }
 
 export interface sendRefComp{
@@ -44,12 +45,10 @@ export interface sendRefComp{
     addMessageId : (id : string) => void;
 }
 
-interface sendProps {
-    msg : string;
-}
+
 const width = window.innerWidth
 
-const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({socket,selectedChatRef,selectedChat,userId,chatRemoved,initialMessages,isTyping,typer,userStatus,setChatRemoved,setSelectedChat,setFriends,setIsTyping,block} : ChatComponentProps,ref) {
+const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({socket,selectedChatRef,selectedChat,userId,chatRemoved,initialMessages,isTyping,typer,userStatus,setChatRemoved,setSelectedChat,setFriends,setIsTyping,block,token} : ChatComponentProps,ref) {
 
     useImperativeHandle(ref ,() =>({
         sendFriendsMessage(msg){
@@ -69,6 +68,7 @@ const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({sock
     const [chatSettings, setChatSettings] = React.useState(false);
     const inputRef = useRef<HTMLInputElement | null>(null);
     const isMobile = width < 769;
+    const [imageChosen,setImageChosen] = React.useState<File | undefined>(undefined)
     
     
     // React.useEffect(()=>{
@@ -217,6 +217,28 @@ const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({sock
         return `Last online ${years} year${years > 1 ? 's' : ''} ago`;
     }
 
+    const uploadImage = async() =>{
+        if(!imageChosen){
+            return
+        }
+
+        const formData = new FormData();
+        formData.append("avatar", imageChosen);
+
+        try {
+            const response = await fetch(`http://${host}:${port}/api/media/images?chatId=${selectedChat?.id}`, {
+            method: "POST",
+            body: formData,
+            headers:{'Authorization':`Bearer ${token}`}
+            
+            });
+        
+            const result = await response.json();
+        }catch{
+
+        }
+    }
+
     
 
     // const capFirstChar = (s : string | undefined) => s?s.charAt(0).toUpperCase() + s.slice(1).toLowerCase():null;
@@ -264,10 +286,19 @@ const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({sock
                         <p style={{color:'white',width:'calc(100% - 35px)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}} >{reply.content}</p>
                         <img src="/assets/imgs/close.svg" onClick={()=>setReply(null)} style={{position:'absolute',cursor:'pointer',height:20,right:10}} />
                     </div>:null}
+                    {imageChosen && 
+                    <div className='image' style={{height:110,width:"100%",position:'relative',overflow:'hidden'}} >
+                        <img onClick={()=>setImageChosen(undefined)} style={{position:'absolute',top:15,right:15,height:25,cursor:'pointer'}} src='/assets/imgs/close.svg' />
+                        <img style={{height:95,marginTop:10,marginLeft:10,borderRadius:'15px 5px 5px 5px',width:'auto',maxWidth:'100%'}} src={URL.createObjectURL(imageChosen)} />
+                    </div>}
                     <div style={{width:'100%',height:50,display:'flex',flexDirection:"row",alignItems:'center',justifyContent:'start'}} >
-                        <input ref={inputRef} onKeyDown={(e)=>{if(e.key === "Enter"){sendMessage();handleTypingStopped()}}} onFocus={() => setIsInputFocused(true)} onBlur={() => setIsInputFocused(false)} onChange={(event)=>{setMessageInput(event.target.value);handleKeyDown()}} value={messageInput} placeholder='Type...' style={{width:'calc(100% - 132px)',color:'white',border:0,outline:'none',fontSize:16,backgroundColor:'transparent',padding:'5px 20px'}} />
+                        <div style={{height:38,width:38,position:'relative',overflow:'hidden',borderRadius:'50%',marginLeft:5}} >
+                            <input onChange={(e)=>setImageChosen(e.target.files?.[0])} type='file' accept='image/*' style={{position:'absolute',width:'100%',height:'calc(100% + 21px)',cursor:'pointer',top:-21}} />
+                            <img src="/assets/imgs/image.svg" style={{height:24,backgroundColor:'#1DB954',padding:7,borderRadius:'50%'}} />
+                        </div>
+                        <input ref={inputRef} onKeyDown={(e)=>{if(e.key === "Enter"){sendMessage();handleTypingStopped()}}} onFocus={() => setIsInputFocused(true)} onBlur={() => setIsInputFocused(false)} onChange={(event)=>{setMessageInput(event.target.value);handleKeyDown()}} value={messageInput} placeholder='Type...' style={{width:isMobile?'calc(100% - 112px)':'calc(100% - 170px)',color:'white',border:0,outline:'none',fontSize:16,backgroundColor:'transparent',padding:isMobile?'5px 10px':'5px 20px'}} />
                         <div onClick={()=>sendMessage()}  className='send' style={{height:24,position:'absolute',right:5,cursor:'pointer',backgroundColor:'#1DB954',borderRadius:24,padding:7,display:'flex',flexDirection:"row",alignItems:'center',justifyContent:'center'}} >
-                            <p style={{color:'white',fontWeight:'500',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}} >Send</p>
+                            {!isMobile && <p style={{color:'white',fontWeight:'500',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}} >Send</p>}
                             <img src="/assets/imgs/send.svg" style={{height:24}} />
                         </div>
                     </div>
@@ -283,12 +314,12 @@ const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({sock
                         {
                             messages.map((msg,i)=>{
                                 const mine = msg.userId === userId;
-                                const txtDims = getTextDimentions(msg.message.text,322,16,19);
+                                // const txtDims = getTextDimentions(msg.message.text,322,16,19);
                                 // const lastSent = msg.new && i === (messages.length - 1);
                                 const justSent = isDateLessThan1SecondAgo(msg.message.time);
                                 if (mine) {
                                     return(
-                                        <div key={i} className={`message mine ${justSent?'new':'old'}`} style={{padding:'10px 14px',position:'relative',cursor:'default',marginTop:5,borderRadius:"7px 7px 2px 7px",backgroundColor:"#1DB954",alignSelf:"end",display:'flex',flexDirection:'column',alignItems:"start",justifyContent:"center"}} >
+                                        <div key={i} className={`message mine ${justSent?'new':'old'}`} style={{padding:'10px 14px',maxWidth:isMobile?'calc(100% - 70px)':320,position:'relative',cursor:'default',marginTop:5,borderRadius:"7px 7px 2px 7px",backgroundColor:"#1DB954",alignSelf:"end",display:'flex',flexDirection:'column',alignItems:"start",justifyContent:"center"}} >
                                             {msg.message.reply?<div style={{height:30,backgroundColor:'white',opacity:0.9,borderRadius:5,display:'flex',alignSelf:'end',alignItems:'center',padding:'0 10px',width:"calc(100% - 20px)",marginBottom:10}} >
                                                 <p style={{color:"black",margin:0,fontWeight:'lighter',fontSize:16,overflow:'hidden',textOverflow:'ellipsis',textWrap:'nowrap'}} >{msg.message.reply.content}</p> 
                                             </div>:null}
@@ -299,7 +330,7 @@ const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({sock
                                     )
                                 }
                                 return(
-                                    <div key={i} className={`message hes ${justSent?'new':'old'}`} style={{padding:'10px 14px',position:'relative',cursor:'default',marginTop:5,boxSizing:'border-box',borderRadius:"7px 7px 7px 2px",backgroundColor:"white",alignSelf:"start",display:'flex',flexDirection:'column',alignItems:"end",justifyContent:"center"}} >
+                                    <div key={i} className={`message hes ${justSent?'new':'old'}`} style={{padding:'10px 14px',maxWidth:isMobile?'calc(100% - 70px)':320,position:'relative',cursor:'default',marginTop:5,boxSizing:'border-box',borderRadius:"7px 7px 7px 2px",backgroundColor:"white",alignSelf:"start",display:'flex',flexDirection:'column',alignItems:"end",justifyContent:"center"}} >
                                         {msg.message.reply?<div style={{height:30,backgroundColor:'#1DB954',opacity:0.9,borderRadius:5,display:'flex',alignSelf:'start',alignItems:'center',padding:'0 10px',width:"calc(100% - 20px)",marginBottom:10}} >
                                             <p style={{color:"white",margin:0,fontWeight:'lighter',fontSize:16,overflow:'hidden',textOverflow:'ellipsis',textWrap:'nowrap'}} >{msg.message.reply.content}</p> 
                                         </div>:null}
@@ -322,7 +353,7 @@ const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({sock
                 {/*  */}
                 {/*  */}
 
-            {!selectedChat?<div className='front-banner' style={{height:'100%',width:'100%',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',zIndex:0}} >
+            {!selectedChat && !isMobile?<div className='front-banner' style={{height:'100%',width:'100%',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',zIndex:0}} >
                 <div style={{position:'absolute',transform:'translateY(-4vw)',display:'flex',alignItems:'center',justifyContent:"center"}} >
                     <img src="/assets/imgs/blob2.svg" style={{width:'23vw'}} />
                     <h1 style={{position:'absolute',top:'50%',transform:'translateY(-50%)',color:"#121212",fontSize:'3vw',margin:'10px 0 0 15px',alignSelf:'start',fontWeight:500,display:'flex',flexDirection:'row',alignItems:"center",justifyContent:'center',cursor:'default' }}>Ch<img src='/assets/imgs/chat.svg' style={{height:'3vw',filter:'brightness(0) saturate(100%) invert(49%) sepia(66%) saturate(575%) hue-rotate(88deg) brightness(102%) contrast(87%)'}} />tify</h1>

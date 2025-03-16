@@ -441,7 +441,7 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
                                     <div style={{width:'calc(100% - 55px)',display:'flex',flexDirection:'column',alignItems:'start',justifyContent:'center',boxSizing:'border-box'}} >
                                         <p style={{width:'100%',fontWeight:'500',fontSize:18,margin:'0 5px',color:'white',cursor:'pointer',padding:'4px 10px',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}} ><span style={{color:'#1DB954',fontSize:20}} ># </span>{friend.user.username}</p>
                                         {/* <p style={{width:'calc(100% - 65px)',fontWeight:'lighter',margin:'0 5px',fontSize:14,color:'white',cursor:'pointer',padding:'0px 10px',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}} ><span style={{color:friend.number?"#1DB954":"white"}}>{friend.last_message?.content}</span></p> */}
-                                        {!friend.number && !friend.last_message && (typer && typer.chatId !== friend.id || !typer)?<p style={{color:'#999',fontWeight:500,fontSize:13,margin:'0 0 0 15px',cursor:'default',height:18}} >{'Offline'}</p>:null}
+                                        {!friend.number && !friend.last_message && (typer && typer.chatId !== friend.id || !typer)?<p style={{color:'#999',fontWeight:500,fontSize:13,margin:'0 0 0 15px',cursor:'default',height:18}} >{'Say hi !'}</p>:null}
                                         {(typer && typer.chatId !== friend.id || !typer) && friend.last_message?<p style={{color:'#999',fontWeight:500,fontSize:13,margin:'0 0 0 15px',cursor:'default',width:'100%',textOverflow:'ellipsis',whiteSpace:'nowrap',overflow:'hidden',height:18}} >{friend.last_message.userId === user?.id?'you':'text'} : <span style={{color:'#1DB954',fontSize:15}} >{friend.last_message.content}</span></p>:null}
                                         {typer && typer.chatId === friend.id?<p className='dot-holder' style={{color:'#1DB954',fontWeight:'500',textAlign:'center',fontSize:15,margin:'0 0 0 15px',display:'flex',height:18,flexDirection:'row',alignItems:"center",justifyContent:'center'}} >Typing<p className='dot one' >.</p><p className='dot two' >.</p><p className='dot three' >.</p></p>:null}
                                         
@@ -567,7 +567,7 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
             {/* INSIDE */}
 
             
-            <Chat ref={chatRef} selectedChatRef={selectedChatRef} typer={typer} socket={sockett} userStatus={userStatus} selectedChat={selectedChat} setSelectedChat={setSelectedChat} initialMessages={messages} userId={user?.id} chatRemoved={chatRemoved} setChatRemoved={setChatRemoved} setFriends={setFriends} setIsTyping={setIsTyping} isTyping={isTyping} block={block} />
+            <Chat ref={chatRef} token={token} selectedChatRef={selectedChatRef} typer={typer} socket={sockett} userStatus={userStatus} selectedChat={selectedChat} setSelectedChat={setSelectedChat} initialMessages={messages} userId={user?.id} chatRemoved={chatRemoved} setChatRemoved={setChatRemoved} setFriends={setFriends} setIsTyping={setIsTyping} isTyping={isTyping} block={block} />
 
         </div>
     </div>
