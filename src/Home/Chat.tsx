@@ -2,6 +2,8 @@ import React, {forwardRef, useImperativeHandle, useRef} from 'react';
 import { Route, BrowserRouter, Routes } from 'react-router-dom';
 import { ChatType, ReceivedMessage, ReplyType, TallMessage, Typer, UserType } from './HomeLogged';
 import { Socket } from 'socket.io-client';
+import axios from 'axios';
+import { host, port } from '../Imps';
 
 
 
@@ -34,6 +36,7 @@ interface ChatComponentProps {
     selectedChatRef:React.RefObject<ChatType | null>;
     typer: Typer | null;
     userStatus: string;
+    block: () => void;
 }
 
 export interface sendRefComp{
@@ -46,7 +49,7 @@ interface sendProps {
 }
 const width = window.innerWidth
 
-const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({socket,selectedChatRef,selectedChat,userId,chatRemoved,initialMessages,isTyping,typer,userStatus,setChatRemoved,setSelectedChat,setFriends,setIsTyping} : ChatComponentProps,ref) {
+const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({socket,selectedChatRef,selectedChat,userId,chatRemoved,initialMessages,isTyping,typer,userStatus,setChatRemoved,setSelectedChat,setFriends,setIsTyping,block} : ChatComponentProps,ref) {
 
     useImperativeHandle(ref ,() =>({
         sendFriendsMessage(msg){
@@ -63,9 +66,9 @@ const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({sock
     const [messages,setMessages] = React.useState<Messages[]>([]);
     const [messageInput,setMessageInput] = React.useState("")
     const [isInputFocused, setIsInputFocused] = React.useState(false);
+    const [chatSettings, setChatSettings] = React.useState(false);
     const inputRef = useRef<HTMLInputElement | null>(null);
     const isMobile = width < 769;
-
     
     
     // React.useEffect(()=>{
@@ -150,8 +153,9 @@ const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({sock
 
     const formatTime = (date: Date) => date.toTimeString().slice(0, 5);
 
-    const removeChat = () =>{
+    const removeChat = async() =>{
         setChatRemoved(true);
+        setChatSettings(false)
         selectedChatRef.current = null;
         setTimeout(()=>{
             setSelectedChat(null);
@@ -213,12 +217,14 @@ const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({sock
         return `Last online ${years} year${years > 1 ? 's' : ''} ago`;
     }
 
+    
+
     // const capFirstChar = (s : string | undefined) => s?s.charAt(0).toUpperCase() + s.slice(1).toLowerCase():null;
 
     
     return(
         <div style={{height:'100%',overflow:'hidden',width:'calc(100% - 350px)',minWidth:isMobile?'100%':'50%',position:'relative',}} >
-                {selectedChat?<div className={chatRemoved?'ls-48':'ls-49'} style={{height:60,width:'100%',backgroundColor:'#393939',display:'flex',flexDirection:'row',alignItems:'center',justifyContent:'start'}} >
+                {selectedChat?<div className={chatRemoved?'ls-48':'ls-49'} style={{height:60,width:'100%',backgroundColor:'#393939',display:'flex',flexDirection:'row',alignItems:'center',justifyContent:'start',position:'relative'}} >
                     <div style={{height:'100%',width:'100%',display:'flex',flexDirection:'row',alignItems:'center',justifyContent:'start'}} >
                         <img onClick={()=>removeChat()} src="/assets/imgs/arrow.svg" style={{height:36,cursor:'pointer'}} />
                         <div style={{width:'calc(100% - 5vh)',height:'100%',display:'flex',flexDirection:'column',alignItems:'start',justifyContent:'center'}} >
@@ -227,7 +233,26 @@ const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({sock
                             {typer && typer.chatId === selectedChat.id?<p className='dot-holder' style={{color:'#1DB954',fontWeight:'500',textAlign:'center',fontSize:14,margin:0,display:'flex',height:16.67,flexDirection:'row',alignItems:"center",justifyContent:'center'}} >Typing<p className='dot one' >.</p><p className='dot two' >.</p><p className='dot three' >.</p></p>:null}
                         </div>
                     </div>
+                    <img onClick={()=>setChatSettings(prev=> !prev)} src="/assets/imgs/command.svg" style={{height:30,position:'absolute',right:10,cursor:'pointer'}} />
                 </div>:null}
+
+                {/* CHAT SETTINGS */}
+                {/* CHAT SETTINGS */}
+                {/* CHAT SETTINGS */}
+
+                <div className='settings' style={{position:'absolute',zIndex:4,width:isMobile?'100%':'50%',maxWidth:!isMobile?200:'100%',backgroundColor:'#252525',right:0,transform:chatSettings?!isMobile?'translateX(0%)':'translateX(0%)':isMobile?'translateX(100%)':`translateX(${(width/2)>350?'350px':`${(width/2)}px`})`,top:(!chatRemoved)?60:isMobile?60:0,transition:'0.2s ease-in-out',borderRadius:'0 0 2px 0'}} >
+                    <div style={{width:'100%',display:'flex',flexDirection:"row",alignItems:'center',justifyContent:"center",padding:'10px 0',borderBottom:'1px solid #333',cursor:'default'}} >
+                        <p style={{color:'#1DB954',margin:'0 0 0 6px'}} >{selectedChat?.user.status === '0'?'Friend':'Blocked'}</p>
+                    </div>
+                    <div onClick={()=>{}} style={{width:'100%',cursor:'pointer',display:'flex',flexDirection:"row",alignItems:'center',justifyContent:"center",padding:'10px 0'}} >
+                        <img src="/assets/imgs/mute.svg" style={{height:25,opacity:0.5}} />
+                        <p style={{color:'white',margin:'0 0 0 6px'}} >Mute</p>
+                    </div>
+                    <div onClick={()=>block()} style={{width:'100%',cursor:'pointer',display:'flex',flexDirection:"row",alignItems:'center',justifyContent:"center",padding:'10px 0'}} >
+                        <img src="/assets/imgs/block.svg" style={{height:25,opacity:0.5}} />
+                        <p style={{color:'#f22',margin:'0 0 0 6px'}} >Block</p>
+                    </div>
+                </div>
 
                 
                 {/* MESSAGE INPUT */}

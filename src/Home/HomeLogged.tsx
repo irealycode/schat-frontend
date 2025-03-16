@@ -42,12 +42,12 @@ export type TallMessage = {
 export type ChatType = {
     id: string,
     last_message: Message | null,
-    status:boolean
     number: number,
     user: {
         id: string,
         username: string,
         avatar: string,
+        status:string,
     },
     
 }
@@ -65,17 +65,18 @@ export type ReceivedMessage = {
 type DumbChatType = {
     id: string,
     last_message: Message | null,
-    status:boolean
     number: number,
     user1: {
         id: string,
         username: string,
         avatar: string,
+        status:string,
     },
     user2: {
         id: string,
         username: string,
         avatar: string,
+        status:string,
     },
     
 }
@@ -201,7 +202,7 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
 
     const getFriendsImages = (chats : ChatType[]) =>{
         chats.forEach(chat => {
-            axios.get(`http://${host}:${port}/api/download/images?imageId=${encodeURIComponent(chat.user.avatar)}`,{headers:{'Authorization':`Bearer ${token}`}}).then((res)=>{
+            axios.get(`http://${host}:${port}/api/users/avatar?imageId=${encodeURIComponent(chat.user.avatar)}`,{headers:{'Authorization':`Bearer ${token}`}}).then((res)=>{
                 if (res.status === 200) {
                     setFriends(prev=>prev.map((f)=>f.id === chat.id?({...f,user:{...f.user,avatar:res.data.url}}):f))
                 }
@@ -218,7 +219,7 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
         axios.get(`http://${host}:${port}/api/users`,{headers:{'Authorization':`Bearer ${token}`}}).then((res)=>{
             if (res.status === 200) {
                 
-                axios.get(`http://${host}:${port}/api/download/images?imageId=${encodeURIComponent(res.data.user.avatar)}`,{headers:{'Authorization':`Bearer ${token}`}}).then((res1)=>{
+                axios.get(`http://${host}:${port}/api/users/avatar?imageId=${encodeURIComponent(res.data.user.avatar)}`,{headers:{'Authorization':`Bearer ${token}`}}).then((res1)=>{
                     setUser({...res.data.user,avatar:res1.data.url})
                 }).catch((err)=>{
                     console.log(err)
@@ -227,7 +228,7 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
                     setLoadingFriends(false)
                     if (res1.status === 200) {
                         // console.log(res1.data.chats.map((chat : DumbChatType)=> ({id:chat.id,last_message:chat.last_message,status:chat.status,number:0,user:chat.user1.id === res.data.user.id?chat.user2:chat.user1})))
-                        const filteredFriends = res1.data.chats.map((chat : DumbChatType)=> ({id:chat.id,last_message:chat.last_message,status:chat.status,number:0,user:chat.user1.id === res.data.user.id?chat.user2:chat.user1}))
+                        const filteredFriends = res1.data.chats.map((chat : DumbChatType)=> ({id:chat.id,last_message:chat.last_message,number:0,user:chat.user1.id === res.data.user.id?chat.user2:chat.user1}))
                         console.log(filteredFriends)
                         setFriends(filteredFriends)
                         getFriendsImages(filteredFriends)
@@ -308,7 +309,7 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
         axios.get(`http://${host}:${port}/api/chats`,{headers:{'Authorization':`Bearer ${token}`}}).then((res1)=>{
             if (res1.status === 200) {
                 // console.log(res1.data.chats.map((chat : DumbChatType)=> ({id:chat.id,last_message:chat.last_message,status:chat.status,number:0,user:chat.user1.id === user?.id?chat.user2:chat.user1})))
-                const filteredFriends = res1.data.chats.map((chat : DumbChatType)=> ({id:chat.id,last_message:chat.last_message,status:chat.status,number:0,user:chat.user1.id === user?.id?chat.user2:chat.user1}))
+                const filteredFriends = res1.data.chats.map((chat : DumbChatType)=> ({id:chat.id,last_message:chat.last_message,number:0,user:chat.user1.id === user?.id?chat.user2:chat.user1}))
                 setFriends(filteredFriends)
                 friendsRef.current = filteredFriends
                 getFriendsImages(filteredFriends)
@@ -364,6 +365,13 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
         setChatRemoved(false)
         setOpenAccount(false)
         setOpenSearch(false)
+    }
+
+    const block = () =>{
+        console.log(selectedChat?.id)
+        axios.post(`http://${host}:${port}/api/chats/block`,{chatId:selectedChat?.id},{headers:{'Authorization':`Bearer ${token}`}}).then((res)=>{
+            console.log(res)
+        }) 
     }
     
 
@@ -433,7 +441,7 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
                                     <div style={{width:'calc(100% - 55px)',display:'flex',flexDirection:'column',alignItems:'start',justifyContent:'center',boxSizing:'border-box'}} >
                                         <p style={{width:'100%',fontWeight:'500',fontSize:18,margin:'0 5px',color:'white',cursor:'pointer',padding:'4px 10px',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}} ><span style={{color:'#1DB954',fontSize:20}} ># </span>{friend.user.username}</p>
                                         {/* <p style={{width:'calc(100% - 65px)',fontWeight:'lighter',margin:'0 5px',fontSize:14,color:'white',cursor:'pointer',padding:'0px 10px',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}} ><span style={{color:friend.number?"#1DB954":"white"}}>{friend.last_message?.content}</span></p> */}
-                                        {!friend.number && !friend.last_message && (typer && typer.chatId !== friend.id || !typer)?<p style={{color:friend.status?'#1DB954':'#999',fontWeight:500,fontSize:13,margin:'0 0 0 15px',cursor:'default',height:18}} >{friend.status?'Online':'Offline'}</p>:null}
+                                        {!friend.number && !friend.last_message && (typer && typer.chatId !== friend.id || !typer)?<p style={{color:'#999',fontWeight:500,fontSize:13,margin:'0 0 0 15px',cursor:'default',height:18}} >{'Offline'}</p>:null}
                                         {(typer && typer.chatId !== friend.id || !typer) && friend.last_message?<p style={{color:'#999',fontWeight:500,fontSize:13,margin:'0 0 0 15px',cursor:'default',width:'100%',textOverflow:'ellipsis',whiteSpace:'nowrap',overflow:'hidden',height:18}} >{friend.last_message.userId === user?.id?'you':'text'} : <span style={{color:'#1DB954',fontSize:15}} >{friend.last_message.content}</span></p>:null}
                                         {typer && typer.chatId === friend.id?<p className='dot-holder' style={{color:'#1DB954',fontWeight:'500',textAlign:'center',fontSize:15,margin:'0 0 0 15px',display:'flex',height:18,flexDirection:'row',alignItems:"center",justifyContent:'center'}} >Typing<p className='dot one' >.</p><p className='dot two' >.</p><p className='dot three' >.</p></p>:null}
                                         
@@ -559,7 +567,7 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
             {/* INSIDE */}
 
             
-            <Chat ref={chatRef} selectedChatRef={selectedChatRef} typer={typer} socket={sockett} userStatus={userStatus} selectedChat={selectedChat} setSelectedChat={setSelectedChat} initialMessages={messages} userId={user?.id} chatRemoved={chatRemoved} setChatRemoved={setChatRemoved} setFriends={setFriends} setIsTyping={setIsTyping} isTyping={isTyping} />
+            <Chat ref={chatRef} selectedChatRef={selectedChatRef} typer={typer} socket={sockett} userStatus={userStatus} selectedChat={selectedChat} setSelectedChat={setSelectedChat} initialMessages={messages} userId={user?.id} chatRemoved={chatRemoved} setChatRemoved={setChatRemoved} setFriends={setFriends} setIsTyping={setIsTyping} isTyping={isTyping} block={block} />
 
         </div>
     </div>
