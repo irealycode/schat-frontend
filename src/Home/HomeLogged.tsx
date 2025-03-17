@@ -43,6 +43,7 @@ export type ChatType = {
     id: string,
     last_message: Message | null,
     number: number,
+    status:string,
     user: {
         id: string,
         username: string,
@@ -183,6 +184,10 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
             }
         });
 
+        socket.on('unauthorized', (data) => {
+            console.log('Un back:', data);
+        });
+
         socket.on('typing', (data) => {
             console.log(data)
             if(data.isTyping){
@@ -228,7 +233,7 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
                     setLoadingFriends(false)
                     if (res1.status === 200) {
                         // console.log(res1.data.chats.map((chat : DumbChatType)=> ({id:chat.id,last_message:chat.last_message,status:chat.status,number:0,user:chat.user1.id === res.data.user.id?chat.user2:chat.user1})))
-                        const filteredFriends = res1.data.chats.map((chat : DumbChatType)=> ({id:chat.id,last_message:chat.last_message,number:0,user:chat.user1.id === res.data.user.id?chat.user2:chat.user1}))
+                        const filteredFriends = res1.data.chats.map((chat : DumbChatType)=> ({id:chat.id,last_message:chat.last_message,number:0,status:chat.user1.id !== res.data.user.id?chat.user2.status:chat.user1.status,user:chat.user1.id === res.data.user.id?chat.user2:chat.user1}))
                         console.log(filteredFriends)
                         setFriends(filteredFriends)
                         getFriendsImages(filteredFriends)
@@ -370,7 +375,35 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
     const block = () =>{
         console.log(selectedChat?.id)
         axios.post(`http://${host}:${port}/api/chats/block`,{chatId:selectedChat?.id},{headers:{'Authorization':`Bearer ${token}`}}).then((res)=>{
-            console.log(res)
+            if (res.status === 200) {
+                setFriends(prev => prev.map((f)=> f.id === selectedChat?.id?({...f,user:{...f.user,status:'2'}}):f) )
+                setSelectedChat(prev => prev?({...prev,user:{...prev.user,status:'2'}}):null)
+            }
+        }) 
+    }
+
+    const mute = () =>{
+        console.log(selectedChat?.id)
+        if (!selectedChat) {
+            return
+        }
+        axios.post(`http://${host}:${port}/api/chats/mute`,{chatId:selectedChat?.id},{headers:{'Authorization':`Bearer ${token}`}}).then((res)=>{
+            if (res.status === 200) {
+                setFriends(prev => prev.map((f)=> f.id === selectedChat?.id?({...f,user:{...f.user,status:'1'}}):f) )
+                setSelectedChat(prev => prev?({...prev,user:{...prev.user,status:'1'}}):null)
+
+            }
+        }) 
+    }
+
+    const normal = () =>{
+        console.log(selectedChat?.id)
+        axios.post(`http://${host}:${port}/api/chats/normal`,{chatId:selectedChat?.id},{headers:{'Authorization':`Bearer ${token}`}}).then((res)=>{
+            if (res.status === 200) {
+                setFriends(prev => prev.map((f)=> f.id === selectedChat?.id?({...f,user:{...f.user,status:'0'}}):f) )
+                setSelectedChat(prev => prev?({...prev,user:{...prev.user,status:'0'}}):null)
+
+            }
         }) 
     }
     
@@ -434,16 +467,17 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
                     
                     {friends.filter((friend)=>friend.user.username.trim().toLocaleLowerCase().includes(searchFriends.toLocaleLowerCase()) && (filterType === 0 || (filterType === 2 && friend.last_message && friend.last_message.new) || (filterType === 1 && friend.last_message && !friend.last_message.new))).map((friend,i)=>{
                             return(
-                                <div onClick={()=>{selectChat(friend)}} className='nf-73' style={{height:70,transition:'0.3s',cursor:'pointer',width:'100%',display:'flex',alignItems:'center',justifyContent:'start',padding:'0 10px',position:'relative',boxSizing:'border-box'}} >
+                                <div onClick={()=>{selectChat(friend)}} className='nf-73' style={{height:70,transition:'0.3s',opacity:friend.status === '2'?0.5:1,cursor:'pointer',width:'100%',display:'flex',alignItems:'center',justifyContent:'start',padding:'0 10px',position:'relative',boxSizing:'border-box'}} >
                                     {friend.last_message && friend.last_message.new?<div style={{position:'absolute',top:15,right:15,backgroundColor:'#1DB954',height:10,width:10,borderRadius:10}} ></div>:null}
                                     {i!=0?<div style={{height:2,width:'80%',borderRadius:4,backgroundColor:'#666',position:"absolute",top:-1,left:'50%',transform:'translateX(-50%)'}} ></div>:null}
-                                    <img onClick={()=>setSelectedImage(friend.user.avatar)} src={friend.user.avatar} style={{height:45,width:45,borderRadius:25}}/>
+                                    {friend.status !== '2'?<img onClick={()=>setSelectedImage(friend.user.avatar)} src={friend.user.avatar} style={{height:45,width:45,borderRadius:25}}/>:<img  src='/assets/imgs/blocked.svg' style={{height:45,width:45,borderRadius:25,filter:'invert(50%)'}}/>}
                                     <div style={{width:'calc(100% - 55px)',display:'flex',flexDirection:'column',alignItems:'start',justifyContent:'center',boxSizing:'border-box'}} >
-                                        <p style={{width:'100%',fontWeight:'500',fontSize:18,margin:'0 5px',color:'white',cursor:'pointer',padding:'4px 10px',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}} ><span style={{color:'#1DB954',fontSize:20}} ># </span>{friend.user.username}</p>
+                                        <p style={{width:'100%',display:'flex',alignItems:'center',justifyContent:'start',fontWeight:'500',fontSize:18,margin:'0 5px',color:'white',cursor:'pointer',padding:'4px 10px',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}} >{friend.user.status === '0'?<span style={{color:'#1DB954',fontSize:20,marginRight:5}} >#</span>:friend.user.status === '2'?<img style={{height:18,marginRight:5,filter:'brightness(0) saturate(100%) invert(31%) sepia(68%) saturate(5275%) hue-rotate(347deg) brightness(100%) contrast(101%)'}} src='/assets/imgs/blocked.svg' />:<img style={{height:20,marginRight:5}} src='/assets/imgs/muted.svg' />}{friend.user.username}</p>
                                         {/* <p style={{width:'calc(100% - 65px)',fontWeight:'lighter',margin:'0 5px',fontSize:14,color:'white',cursor:'pointer',padding:'0px 10px',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}} ><span style={{color:friend.number?"#1DB954":"white"}}>{friend.last_message?.content}</span></p> */}
-                                        {!friend.number && !friend.last_message && (typer && typer.chatId !== friend.id || !typer)?<p style={{color:'#999',fontWeight:500,fontSize:13,margin:'0 0 0 15px',cursor:'default',height:18}} >{'Say hi !'}</p>:null}
-                                        {(typer && typer.chatId !== friend.id || !typer) && friend.last_message?<p style={{color:'#999',fontWeight:500,fontSize:13,margin:'0 0 0 15px',cursor:'default',width:'100%',textOverflow:'ellipsis',whiteSpace:'nowrap',overflow:'hidden',height:18}} >{friend.last_message.userId === user?.id?'you':'text'} : <span style={{color:'#1DB954',fontSize:15}} >{friend.last_message.content}</span></p>:null}
-                                        {typer && typer.chatId === friend.id?<p className='dot-holder' style={{color:'#1DB954',fontWeight:'500',textAlign:'center',fontSize:15,margin:'0 0 0 15px',display:'flex',height:18,flexDirection:'row',alignItems:"center",justifyContent:'center'}} >Typing<p className='dot one' >.</p><p className='dot two' >.</p><p className='dot three' >.</p></p>:null}
+                                        {!friend.number && !friend.last_message && (typer && typer.chatId !== friend.id || !typer) && friend.user.status !== '1'?<p style={{color:'#999',fontWeight:500,fontSize:13,margin:'0 0 0 15px',cursor:'default',height:18}} >{'Say hi !'}</p>:null}
+                                        {(typer && typer.chatId !== friend.id || !typer) && friend.last_message && friend.user.status !== '1'?<p style={{color:'#999',fontWeight:500,fontSize:13,margin:'0 0 0 15px',cursor:'default',width:'100%',textOverflow:'ellipsis',whiteSpace:'nowrap',overflow:'hidden',height:18}} >{friend.last_message.userId === user?.id?'you':'text'} : <span style={{color:'#1DB954',fontSize:15}} >{friend.last_message.content}</span></p>:null}
+                                        {typer && typer.chatId === friend.id && friend.user.status !== '1'?<p className='dot-holder' style={{color:'#1DB954',fontWeight:'500',textAlign:'center',fontSize:15,margin:'0 0 0 15px',display:'flex',height:18,flexDirection:'row',alignItems:"center",justifyContent:'center'}} >Typing<p className='dot one' >.</p><p className='dot two' >.</p><p className='dot three' >.</p></p>:null}
+                                        {friend.user.status === '1'?<p style={{color:'#999',fontWeight:500,fontSize:13,margin:'0 0 0 15px',cursor:'default',height:18}} >{'Muted'}</p>:null}
                                         
                                         
                                         {friend.number?<div style={{position:'absolute',right:10,bottom:10,backgroundColor:'#1DB954',alignSelf:'end',padding:'2px 8px 2px 7px',borderRadius:20,display:'flex',alignItems:"center",justifyContent:'center',fontSize:13}} >{getParsedNumber(friend.number)}</div>:null}
@@ -567,7 +601,7 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
             {/* INSIDE */}
 
             
-            <Chat ref={chatRef} token={token} selectedChatRef={selectedChatRef} typer={typer} socket={sockett} userStatus={userStatus} selectedChat={selectedChat} setSelectedChat={setSelectedChat} initialMessages={messages} userId={user?.id} chatRemoved={chatRemoved} setChatRemoved={setChatRemoved} setFriends={setFriends} setIsTyping={setIsTyping} isTyping={isTyping} block={block} />
+            <Chat ref={chatRef} token={token} selectedChatRef={selectedChatRef} typer={typer} socket={sockett} userStatus={userStatus} selectedChat={selectedChat} setSelectedChat={setSelectedChat} initialMessages={messages} userId={user?.id} chatRemoved={chatRemoved} setChatRemoved={setChatRemoved} setFriends={setFriends} setIsTyping={setIsTyping} isTyping={isTyping} block={block} mute={mute} normal={normal} />
 
         </div>
     </div>

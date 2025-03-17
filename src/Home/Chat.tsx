@@ -37,6 +37,8 @@ interface ChatComponentProps {
     typer: Typer | null;
     userStatus: string;
     block: () => void;
+    mute: () => void;
+    normal: () => void;
     token: string;
 }
 
@@ -48,7 +50,7 @@ export interface sendRefComp{
 
 const width = window.innerWidth
 
-const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({socket,selectedChatRef,selectedChat,userId,chatRemoved,initialMessages,isTyping,typer,userStatus,setChatRemoved,setSelectedChat,setFriends,setIsTyping,block,token} : ChatComponentProps,ref) {
+const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({socket,selectedChatRef,selectedChat,userId,chatRemoved,initialMessages,isTyping,typer,userStatus,setChatRemoved,setSelectedChat,setFriends,setIsTyping,block,mute,normal,token} : ChatComponentProps,ref) {
 
     useImperativeHandle(ref ,() =>({
         sendFriendsMessage(msg){
@@ -137,7 +139,7 @@ const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({sock
     }
     
     const sendMessage = () =>{
-        if (messageInput.trim() !== "") {
+        if (messageInput.trim() !== "" && selectedChat?.status !== '2') {
             setMessages(msgs => [...msgs,{userId:userId,message:{id:'none',text:messageInput,time:(new Date()),reply:reply}}])
             setMessageInput("")
             socket?.emit('message',{
@@ -234,6 +236,7 @@ const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({sock
             });
         
             const result = await response.json();
+            console.log(result)
         }catch{
 
         }
@@ -264,16 +267,29 @@ const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({sock
 
                 <div className='settings' style={{position:'absolute',zIndex:4,width:isMobile?'100%':'50%',maxWidth:!isMobile?200:'100%',backgroundColor:'#252525',right:0,transform:chatSettings?!isMobile?'translateX(0%)':'translateX(0%)':isMobile?'translateX(100%)':`translateX(${(width/2)>350?'350px':`${(width/2)}px`})`,top:(!chatRemoved)?60:isMobile?60:0,transition:'0.2s ease-in-out',borderRadius:'0 0 2px 0'}} >
                     <div style={{width:'100%',display:'flex',flexDirection:"row",alignItems:'center',justifyContent:"center",padding:'10px 0',borderBottom:'1px solid #333',cursor:'default'}} >
-                        <p style={{color:'#1DB954',margin:'0 0 0 6px'}} >{selectedChat?.user.status === '0'?'Friend':'Blocked'}</p>
+                        {selectedChat?.status === '0' && <p style={{color:selectedChat?.user.status === '0'?'#1DB954':selectedChat?.user.status === '2'?'#f22':'white',margin:'0 0 0 6px'}} >{selectedChat?.user.status === '0'?'Friend':selectedChat?.user.status === '2'?'Blocked':'Muted'}</p>}
+                        {selectedChat?.status === '2' && <p style={{color:'white',margin:'0 0 0 6px'}} >You've been Blocked</p>}
                     </div>
-                    <div onClick={()=>{}} style={{width:'100%',cursor:'pointer',display:'flex',flexDirection:"row",alignItems:'center',justifyContent:"center",padding:'10px 0'}} >
+                    {selectedChat?.user.status !== '1' ? 
+                    <div onClick={()=>mute()} style={{width:'100%',cursor:'pointer',display:'flex',flexDirection:"row",alignItems:'center',justifyContent:"center",padding:'10px 0'}} >
                         <img src="/assets/imgs/mute.svg" style={{height:25,opacity:0.5}} />
                         <p style={{color:'white',margin:'0 0 0 6px'}} >Mute</p>
-                    </div>
+                    </div>:
+                    <div onClick={()=>normal()} style={{width:'100%',cursor:'pointer',display:'flex',flexDirection:"row",alignItems:'center',justifyContent:"center",padding:'10px 0'}} >
+                        <img src="/assets/imgs/mute.svg" style={{height:25,opacity:0.5}} />
+                        <p style={{color:'#1DB954',margin:'0 0 0 6px'}} >UnMute</p>
+                    </div>}
+
+
+                    {selectedChat?.user.status !== '2' ? 
                     <div onClick={()=>block()} style={{width:'100%',cursor:'pointer',display:'flex',flexDirection:"row",alignItems:'center',justifyContent:"center",padding:'10px 0'}} >
                         <img src="/assets/imgs/block.svg" style={{height:25,opacity:0.5}} />
                         <p style={{color:'#f22',margin:'0 0 0 6px'}} >Block</p>
-                    </div>
+                    </div>:
+                    <div onClick={()=>normal()} style={{width:'100%',cursor:'pointer',display:'flex',flexDirection:"row",alignItems:'center',justifyContent:"center",padding:'10px 0'}} >
+                        <img src="/assets/imgs/block.svg" style={{height:25,opacity:0.5}} />
+                        <p style={{color:'#1DB954',margin:'0 0 0 6px'}} >UnBlock</p>
+                    </div>}
                 </div>
 
                 
@@ -293,7 +309,7 @@ const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({sock
                     </div>}
                     <div style={{width:'100%',height:50,display:'flex',flexDirection:"row",alignItems:'center',justifyContent:'start'}} >
                         <div style={{height:38,width:38,position:'relative',overflow:'hidden',borderRadius:'50%',marginLeft:5}} >
-                            <input onChange={(e)=>setImageChosen(e.target.files?.[0])} type='file' accept='image/*' style={{position:'absolute',width:'100%',height:'calc(100% + 21px)',cursor:'pointer',top:-21}} />
+                            <input onChange={(e)=>setImageChosen(e.target.files?.[0])} type='file' accept='image/*' style={{position:'absolute',width:'100%',height:'calc(100% + 21px)',cursor:'pointer',top:-21,opacity:0}} />
                             <img src="/assets/imgs/image.svg" style={{height:24,backgroundColor:'#1DB954',padding:7,borderRadius:'50%'}} />
                         </div>
                         <input ref={inputRef} onKeyDown={(e)=>{if(e.key === "Enter"){sendMessage();handleTypingStopped()}}} onFocus={() => setIsInputFocused(true)} onBlur={() => setIsInputFocused(false)} onChange={(event)=>{setMessageInput(event.target.value);handleKeyDown()}} value={messageInput} placeholder='Type...' style={{width:isMobile?'calc(100% - 112px)':'calc(100% - 170px)',color:'white',border:0,outline:'none',fontSize:16,backgroundColor:'transparent',padding:isMobile?'5px 10px':'5px 20px'}} />
