@@ -17,6 +17,7 @@ type Messages = {
         reply : ReplyType | null
         media : string | null,
         link : string | null,
+        seen : boolean,
     }
 };
 
@@ -46,6 +47,7 @@ interface ChatComponentProps {
 export interface sendRefComp{
     sendFriendsMessage : (msg : ReceivedMessage) => void;
     addMessageId : (id : string) => void;
+    readMessage : () => void;
 }
 
 
@@ -60,6 +62,9 @@ const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({sock
         addMessageId(id){
             setMessageId(id)
         },
+        readMessage(){
+            setMessages(prev => prev.map((m,i)=>i === (prev.length -1)?({...m,message:{...m.message,seen:true}}):m))
+        },
     }))
     
     let typingTimeout = useRef<NodeJS.Timeout | undefined>(undefined);
@@ -71,6 +76,7 @@ const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({sock
     const inputRef = useRef<HTMLInputElement | null>(null);
     const isMobile = width < 769;
     const [imageChosen,setImageChosen] = React.useState<File | undefined>(undefined)
+    const readLastMessage = useRef(false);
     
     
     // React.useEffect(()=>{
@@ -82,16 +88,22 @@ const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({sock
     // },[isTyping,isInputFocused,typingTimeout])
     const placeImages = (messages : TallMessage[]) =>{
         messages.forEach(async msg => {
-            if (msg.media) {
-                const t = await getImage(msg.media)
-                setMessages(prev => prev.map((m)=> msg.id === m.message.id?({...m,message:{...m.message,link:t}}):m))
+            if (msg.media || msg.reply?.media) {
+                if (msg.media) {
+                    const t = await getImage(msg.media)
+                    setMessages(prev => prev.map((m)=> msg.id === m.message.id?({...m,message:{...m.message,link:t}}):m))
+                }
+                if(msg.reply?.media){
+                    const t = await getImage(msg.reply.media)
+                    setMessages(prev => prev.map((m)=> msg.id === m.message.id && m.message.reply?({...m,message:{...m.message,reply:{...m.message.reply,link:t}}}):m))
+                }
             }
         });
     }
 
     React.useEffect(()=>{
         if (initialMessages) {
-            setMessages(initialMessages.map((msg)=> ({userId:msg.userId,message:{id:msg.id,text:msg.content,time:new Date(msg.sentAt),reply:msg.reply,media:msg.media,link:null}})).reverse())
+            setMessages(initialMessages.map((msg)=> ({userId:msg.userId,message:{id:msg.id,text:msg.content,time:new Date(msg.sentAt),reply:msg.reply,media:msg.media,link:null,seen : msg.seen}})).reverse())
             setReply(null)
             setMessageInput("")
             placeImages(initialMessages)
@@ -142,10 +154,10 @@ const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({sock
     const rcvMessage = async(msg : ReceivedMessage) =>{
         if(msg.media){
             const t = await getImage(msg.media)
-            setMessages(msgs => [...msgs,{userId:selectedChat?.user.id,message:{id:msg.id,text:msg.content,time:(new Date(msg.sentAt)),reply:msg.reply,media:msg.media,link:t}}])
+            setMessages(msgs => [...msgs,{userId:selectedChat?.user.id,message:{id:msg.id,text:msg.content,time:(new Date(msg.sentAt)),reply:msg.reply,media:msg.media,link:t,seen:false}}])
             return
         }
-        setMessages(msgs => [...msgs,{userId:selectedChat?.user.id,message:{id:msg.id,text:msg.content,time:(new Date(msg.sentAt)),reply:msg.reply,media:null,link:null}}])
+        setMessages(msgs => [...msgs,{userId:selectedChat?.user.id,message:{id:msg.id,text:msg.content,time:(new Date(msg.sentAt)),reply:msg.reply,media:null,link:null,seen:false}}])
     }
 
     const setMessageId = (id : string) =>{
@@ -155,7 +167,7 @@ const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({sock
     const sendMessage = () =>{
         if (messageInput.trim() !== "" && !imageChosen && selectedChat?.status !== '2') {
             console.log('ook')
-            setMessages(msgs => [...msgs,{userId:userId,message:{id:'none',text:messageInput,time:(new Date()),reply:reply,media:null,link:null}}])
+            setMessages(msgs => [...msgs,{userId:userId,message:{id:'none',text:messageInput,time:(new Date()),reply:reply,media:null,link:null,seen:false}}])
             setMessageInput("")
             socket?.emit('message',{
                 chatId : selectedChat?.id,
@@ -173,7 +185,7 @@ const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({sock
                 if(res){
                     const t = await getImage(res)
                     console.log(t)
-                    setMessages(msgs => [...msgs,{userId:userId,message:{id:'none',text:messageInput,time:(new Date()),reply:reply,media:res,link:t}}])
+                    setMessages(msgs => [...msgs,{userId:userId,message:{id:'none',text:messageInput,time:(new Date()),reply:reply,media:res,link:t,seen:false}}])
                     setMessageInput("")
                     socket?.emit('message',{
                         chatId : selectedChat?.id,
@@ -232,8 +244,8 @@ const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({sock
         return date > oneSecondAgo;
     }
 
-    const pushReply = (id : string,text: string) =>{
-        setReply({id:id,content:text});
+    const pushReply = (id : string,text: string,media: string | undefined,link : string | null) =>{
+        setReply({id:id,content:text,media:media,link});
         inputRef.current?.focus();
     }
 
@@ -307,10 +319,19 @@ const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({sock
                 {/* MESSAGE INPUT */}
 
                 {selectedChat?<div className={chatRemoved?'message-input close':'message-input open'} style={{position:'absolute',zIndex:7,backgroundColor:"#252525",bottom:10,width:'calc(100% - 20px)',overflow:"hidden",boxSizing:'border-box',borderRadius:25,minHeight:50,left:10,display:'flex',flexDirection:"column",alignItems:'center',justifyContent:'end',boxShadow:'0px 20px 15px #121212'}} >
-                    {reply?<div className='reply' style={{width:'calc(100% - 10px)',overflow:'hidden',height:40,margin:'5px 0 10px 0',borderRadius:20,backgroundColor:'#393939',display:'flex',alignItems:"center",justifyContent:'start',padding:'0 15px',boxSizing:'border-box',position:"relative"}} >
+                    {reply && !reply.link?<div className='reply' style={{width:'calc(100% - 10px)',overflow:'hidden',height:40,margin:'5px 0 10px 0',borderRadius:20,backgroundColor:'#393939',display:'flex',alignItems:"center",justifyContent:'start',padding:'0 15px',boxSizing:'border-box',position:"relative"}} >
                         <p style={{color:'white',width:'calc(100% - 35px)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}} >{reply.content}</p>
                         <img src="/assets/imgs/close.svg" onClick={()=>setReply(null)} style={{position:'absolute',cursor:'pointer',height:20,right:10}} />
                     </div>:null}
+
+                    {reply && reply.link?
+                    <div className='image' style={{height:110,width:"100%",position:'relative',overflow:'hidden'}} >
+                        <img onClick={()=>setReply(null)} style={{position:'absolute',top:15,right:15,height:25,cursor:'pointer'}} src='/assets/imgs/close.svg' />
+                        <img style={{height:95,marginTop:10,marginLeft:10,borderRadius:'15px 5px 5px 5px',width:'auto',maxWidth:'100%'}} src={reply.link}/>
+                    </div>
+                    :null}
+
+
                     {imageChosen && 
                     <div className='image' style={{height:110,width:"100%",position:'relative',overflow:'hidden'}} >
                         <img onClick={()=>setImageChosen(undefined)} style={{position:'absolute',top:15,right:15,height:25,cursor:'pointer'}} src='/assets/imgs/close.svg' />
@@ -334,36 +355,46 @@ const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({sock
                 {/* MESSAGES */}
                 {/* MESSAGES */}
 
-                {!chatRemoved?<div ref={chatRef}  className='messages-container' style={{width:'100%',height:reply?'calc(100% - 110px)':'calc(100% - 60px)',padding:'0 15px 77px 15px',boxSizing:'border-box',overflowY:"scroll",display:'flex',flexDirection:'column-reverse',alignItems:"center",justifyContent:'end'}} >
+                {!chatRemoved?<div ref={chatRef}  className='messages-container' style={{width:'100%',height:reply?reply.link?'calc(100% - 160px)':'calc(100% - 110px)':'calc(100% - 60px)',padding:'0 15px 77px 15px',boxSizing:'border-box',overflowY:"scroll",display:'flex',flexDirection:'column-reverse',alignItems:"center",justifyContent:'end'}} >
                     {/* <div className='messages-container' style={{width:'100%',transition:'0.2s',padding:'0 15px 77px 15px',overflow:'visible',position:"relative",boxSizing:'border-box',display:'flex',flexDirection:'column'}}> */}
+                    {messages.length > 0 && messages.slice(-1)[0].message.seen && messages.slice(-1)[0].userId === userId ? <div style={{display:"flex",flexDirection:'row',alignSelf:'end'}} >
+                        <p style={{fontSize:16,color:'#999',margin:0}} >seen</p>
+                        <img style={{height:20,marginLeft:5, filter: 'brightness(0) saturate(100%) invert(60%) sepia(33%) saturate(1105%) hue-rotate(88deg) brightness(90%) contrast(85%)'}} src="/assets/imgs/seen.svg" />
+                    </div>:null}
+
                         {
                             messages.map((msg,i)=>{
                                 const mine = msg.userId === userId;
+                                console.log( msg.message.reply)
                                 // const txtDims = getTextDimentions(msg.message.text,322,16,19);
                                 // const lastSent = msg.new && i === (messages.length - 1);
                                 const justSent = isDateLessThan1SecondAgo(msg.message.time);
                                 if (mine) {
+                                    
                                     return(
                                         <div key={i} className={`message mine ${justSent?'new':'old'}`} style={{padding:'10px 14px',maxWidth:isMobile?'calc(100% - 70px)':320,position:'relative',cursor:'default',marginTop:5,borderRadius:"7px 7px 2px 7px",backgroundColor:"#1DB954",alignSelf:"end",display:'flex',flexDirection:'column',alignItems:"start",justifyContent:"center"}} >
                                             {msg.message.media && msg.message.link ?<img style={{width:'100%',borderRadius:5,marginBottom:5}} src={msg.message.link} />:null}
-                                            {msg.message.reply?<div style={{height:30,backgroundColor:'white',opacity:0.9,borderRadius:5,display:'flex',alignSelf:'end',alignItems:'center',padding:'0 10px',width:"calc(100% - 20px)",marginBottom:10}} >
-                                                <p style={{color:"black",margin:0,fontWeight:'lighter',fontSize:16,overflow:'hidden',textOverflow:'ellipsis',textWrap:'nowrap'}} >{msg.message.reply.content}</p> 
+                                            {msg.message.reply?<div style={{height:msg.message.reply.link?'auto':30,backgroundColor:'white',opacity:0.9,borderRadius:5,display:'flex',alignSelf:'end',alignItems:'center',padding:'0 10px',width:"calc(100% - 20px)",marginBottom:10}} >
+                                                <p style={{color:"black",margin:0,fontWeight:'lighter',fontSize:16,overflow:'hidden',textOverflow:'ellipsis',textWrap:'nowrap'}} >{msg.message.reply.content}</p>
+                                                {msg.message.reply.link ?<img style={{width:'100%',borderRadius:5,margin:'10px 0 10px 0',zoom:0.7}} src={msg.message.reply.link} />:null}
                                             </div>:null}
                                             <p style={{color:"#fff",margin:0,fontWeight:'lighter',fontSize:16,wordBreak:'break-word',overflowWrap:'break-word',hyphens:'auto',alignSelf:'end'}} >{msg.message.text}</p>
                                             <p className="time" style={{color:'#ddd',position:'absolute',fontWeight:'lighter',fontSize:10,margin:0}} >{formatTime(msg.message.time)}</p>
-                                            <img onClick={()=>{pushReply(msg.message.id,msg.message.text)}} className='reply-btn' src="/assets/imgs/reply.svg" style={{cursor:'pointer',height:20,zIndex:2,position:'absolute',left:0,transform:'translateX(calc(-100% - 10px)) rotateY(180deg)'}}  />
+                                            <img onClick={()=>{pushReply(msg.message.id,msg.message.text,msg.message.media??undefined,msg.message.link)}} className='reply-btn' src="/assets/imgs/reply.svg" style={{cursor:'pointer',height:20,zIndex:2,position:'absolute',left:0,transform:'translateX(calc(-100% - 10px)) rotateY(180deg)'}}  />
                                         </div>
                                     )
                                 }
                                 return(
                                     <div key={i} className={`message hes ${justSent?'new':'old'}`} style={{padding:'10px 14px',maxWidth:isMobile?'calc(100% - 70px)':320,position:'relative',cursor:'default',marginTop:5,boxSizing:'border-box',borderRadius:"7px 7px 7px 2px",backgroundColor:"white",alignSelf:"start",display:'flex',flexDirection:'column',alignItems:"end",justifyContent:"center"}} >
                                         {msg.message.media && msg.message.link ?<img style={{width:'100%',borderRadius:5}} src={msg.message.link} />:null}
-                                        {msg.message.reply?<div style={{height:30,backgroundColor:'#1DB954',opacity:0.9,borderRadius:5,display:'flex',alignSelf:'start',alignItems:'center',padding:'0 10px',width:"calc(100% - 20px)",marginBottom:10}} >
+                                        {msg.message.reply?<div style={{height:msg.message.reply.link?'auto':30,backgroundColor:'#1DB954',opacity:0.9,borderRadius:5,display:'flex',alignSelf:'start',alignItems:'center',padding:'0 10px',width:"calc(100% - 20px)",marginBottom:10}} >
                                             <p style={{color:"white",margin:0,fontWeight:'lighter',fontSize:16,overflow:'hidden',textOverflow:'ellipsis',textWrap:'nowrap'}} >{msg.message.reply.content}</p> 
+                                            {msg.message.reply.link ?<img style={{width:'100%',borderRadius:5,margin:'10px 0 10px 0',zoom:0.7}} src={msg.message.reply.link} />:null}
+
                                         </div>:null}
                                         <p style={{color:"#121212",margin:0,fontWeight:'lighter',fontSize:16,wordBreak:'break-word',overflowWrap:'break-word',hyphens:'auto',alignSelf:'start'}} >{msg.message.text}</p> 
                                         <p className="time" style={{color:'#ddd',position:'absolute',fontWeight:'lighter',fontSize:10,margin:0}} >{formatTime(msg.message.time)}</p>
-                                        <img onClick={()=>pushReply(msg.message.id,msg.message.text)} className='reply-btn' src="/assets/imgs/reply.svg" style={{cursor:'pointer',height:20,position:'absolute',right:0,transform:'translateX(calc(100% + 10px))'}}  />
+                                        <img onClick={()=>pushReply(msg.message.id,msg.message.text,msg.message.media??undefined,msg.message.link)} className='reply-btn' src="/assets/imgs/reply.svg" style={{cursor:'pointer',height:20,position:'absolute',right:0,transform:'translateX(calc(100% + 10px))'}}  />
                                     </div>
                                 )
                             }).reverse()

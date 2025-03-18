@@ -25,7 +25,9 @@ export type Message = {
 
 export type ReplyType = {
     id : string,
-    content : string
+    content : string,
+    media : string | undefined,
+    link : string | null,
 };
 
 
@@ -37,6 +39,7 @@ export type TallMessage = {
     reply: ReplyType | null,
     sentAt: string,
     userId: string,
+    seen: boolean,
 }
 
 export type ChatType = {
@@ -60,6 +63,7 @@ export type ReceivedMessage = {
     id : string,
     content : string,
     sentAt : string,
+    seen: boolean,
     reply : ReplyType | null
 };
 
@@ -167,7 +171,7 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
             console.log(data)
             if (data.message) {
                 console.log(data.message.chatId , ' | ', selectedChatRef.current?.id)
-                console.log(data.message)
+                console.log('ok:',data.message)
                 if (selectedChatRef.current && data.message.chatId === selectedChatRef.current.id) {
                     addMessageReceived(data.message)
                 }
@@ -177,6 +181,14 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
                     getOneChat(data.message.chatId);
                 }
                 
+                if (data.message.chatId === selectedChatRef.current?.id) {
+                    socket?.emit('read',
+                        {
+                            "chatId": data.message.chatId,
+                            "receiverId": selectedChatRef.current?.user.id,
+                        }
+                    )
+                }
             }
         });
 
@@ -200,6 +212,12 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
             }
             
         });
+
+        socket.on('read',(data)=>{
+            if(data.chatId && data.chatId === selectedChatRef.current?.id){
+                chatRef.current?.readMessage()
+            }
+        })
         setSockett(socket)
         getUser()
 
@@ -367,6 +385,12 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
                     if (res1.data.status) {
                         setUserStatus(res1.data.status)
                     }
+                    sockett?.emit('read',
+                        {
+                            "chatId": friend.id,
+                            "receiverId": friend.user.id,
+                        }
+                    )
                 }).catch(()=>{
 
                 })

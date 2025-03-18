@@ -189,7 +189,6 @@
   font-family: 'Rubik',sans-serif;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  overflow-x: hidden !important;
 }
 html{
   overflow: hidden !important;
