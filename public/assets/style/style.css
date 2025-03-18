@@ -189,10 +189,16 @@
   font-family: 'Rubik',sans-serif;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  overflow-x: hidden !important;
+}
+html{
+  overflow: hidden !important;
+  
 }
 
 body{
   background-color: "#121212" !important;
+  overflow: hidden !important;
 }
 /* .scale-d > *{
   transform: scale(0.9);

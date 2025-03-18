@@ -15,6 +15,8 @@ type Messages = {
         text : string,
         time : Date,
         reply : ReplyType | null
+        media : string | null,
+        link : string | null,
     }
 };
 
@@ -36,10 +38,9 @@ interface ChatComponentProps {
     selectedChatRef:React.RefObject<ChatType | null>;
     typer: Typer | null;
     userStatus: string;
-    block: () => void;
-    mute: () => void;
-    normal: () => void;
+    setChatSettings: React.Dispatch<React.SetStateAction<boolean>>;
     token: string;
+    getImage: (media: string) => Promise<any>;
 }
 
 export interface sendRefComp{
@@ -50,7 +51,7 @@ export interface sendRefComp{
 
 const width = window.innerWidth
 
-const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({socket,selectedChatRef,selectedChat,userId,chatRemoved,initialMessages,isTyping,typer,userStatus,setChatRemoved,setSelectedChat,setFriends,setIsTyping,block,mute,normal,token} : ChatComponentProps,ref) {
+const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({socket,selectedChatRef,selectedChat,userId,chatRemoved,initialMessages,isTyping,typer,userStatus,setChatRemoved,setSelectedChat,setFriends,setIsTyping,setChatSettings,token,getImage} : ChatComponentProps,ref) {
 
     useImperativeHandle(ref ,() =>({
         sendFriendsMessage(msg){
@@ -67,7 +68,6 @@ const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({sock
     const [messages,setMessages] = React.useState<Messages[]>([]);
     const [messageInput,setMessageInput] = React.useState("")
     const [isInputFocused, setIsInputFocused] = React.useState(false);
-    const [chatSettings, setChatSettings] = React.useState(false);
     const inputRef = useRef<HTMLInputElement | null>(null);
     const isMobile = width < 769;
     const [imageChosen,setImageChosen] = React.useState<File | undefined>(undefined)
@@ -80,12 +80,21 @@ const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({sock
     //         window.removeEventListener("keydown", handleKeyDown);
     //       };
     // },[isTyping,isInputFocused,typingTimeout])
+    const placeImages = (messages : TallMessage[]) =>{
+        messages.forEach(async msg => {
+            if (msg.media) {
+                const t = await getImage(msg.media)
+                setMessages(prev => prev.map((m)=> msg.id === m.message.id?({...m,message:{...m.message,link:t}}):m))
+            }
+        });
+    }
 
     React.useEffect(()=>{
         if (initialMessages) {
-            setMessages(initialMessages.map((msg)=> ({userId:msg.userId,message:{id:msg.id,text:msg.content,time:new Date(msg.sentAt),reply:msg.reply}})).reverse())
+            setMessages(initialMessages.map((msg)=> ({userId:msg.userId,message:{id:msg.id,text:msg.content,time:new Date(msg.sentAt),reply:msg.reply,media:msg.media,link:null}})).reverse())
             setReply(null)
             setMessageInput("")
+            placeImages(initialMessages)
         }else{
             setMessages([])
         }
@@ -130,8 +139,13 @@ const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({sock
         
     };
     
-    const rcvMessage = (msg : ReceivedMessage) =>{
-        setMessages(msgs => [...msgs,{userId:selectedChat?.user.id,message:{id:msg.id,text:msg.content,time:(new Date(msg.sentAt)),reply:msg.reply}}])
+    const rcvMessage = async(msg : ReceivedMessage) =>{
+        if(msg.media){
+            const t = await getImage(msg.media)
+            setMessages(msgs => [...msgs,{userId:selectedChat?.user.id,message:{id:msg.id,text:msg.content,time:(new Date(msg.sentAt)),reply:msg.reply,media:msg.media,link:t}}])
+            return
+        }
+        setMessages(msgs => [...msgs,{userId:selectedChat?.user.id,message:{id:msg.id,text:msg.content,time:(new Date(msg.sentAt)),reply:msg.reply,media:null,link:null}}])
     }
 
     const setMessageId = (id : string) =>{
@@ -139,17 +153,39 @@ const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({sock
     }
     
     const sendMessage = () =>{
-        if (messageInput.trim() !== "" && selectedChat?.status !== '2') {
-            setMessages(msgs => [...msgs,{userId:userId,message:{id:'none',text:messageInput,time:(new Date()),reply:reply}}])
+        if (messageInput.trim() !== "" && !imageChosen && selectedChat?.status !== '2') {
+            console.log('ook')
+            setMessages(msgs => [...msgs,{userId:userId,message:{id:'none',text:messageInput,time:(new Date()),reply:reply,media:null,link:null}}])
             setMessageInput("")
             socket?.emit('message',{
                 chatId : selectedChat?.id,
                 receiverId: selectedChat?.user.id,
                 content: messageInput,
-                reply:reply
+                reply:reply,
             })
             setFriends(prev =>  prev.map((fs) => (fs.id === selectedChat?.id?{...fs,last_message:{chatId:selectedChat?.id,userId:userId??'error',content:messageInput,new:false}}:fs)))
             setReply(null)
+            return
+        }
+
+        if (imageChosen && selectedChat?.status !== '2') {
+            uploadImage().then(async(res)=>{
+                if(res){
+                    const t = await getImage(res)
+                    console.log(t)
+                    setMessages(msgs => [...msgs,{userId:userId,message:{id:'none',text:messageInput,time:(new Date()),reply:reply,media:res,link:t}}])
+                    setMessageInput("")
+                    socket?.emit('message',{
+                        chatId : selectedChat?.id,
+                        receiverId: selectedChat?.user.id,
+                        content: messageInput,
+                        reply:reply,
+                        media:res,
+                    })
+                    setImageChosen(undefined)
+                    setFriends(prev =>  prev.map((fs) => (fs.id === selectedChat?.id?{...fs,last_message:{chatId:selectedChat?.id,userId:userId??'error',content:messageInput,new:false}}:fs)))
+                }
+            })
         }
     }
 
@@ -167,28 +203,28 @@ const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({sock
     
 
 
-    function getTextDimentions(text : string, maxWidth : number, fontSize : number, lineHeight : number) {
-        const tempElement = document.createElement('p');
-        tempElement.style.fontFamily = 'Rubik';
-        tempElement.style.position = 'absolute';
-        tempElement.style.visibility = 'hidden';
-        tempElement.style.whiteSpace = 'pre-wrap'; 
-        tempElement.style.width = `${maxWidth}px`; 
-        tempElement.style.fontSize = `${fontSize}px`; 
-        tempElement.style.wordBreak='break-word';
-        tempElement.style.overflowWrap='break-word';
-        tempElement.style.hyphens='auto';
-        tempElement.innerText = text; 
+    // function getTextDimentions(text : string, maxWidth : number, fontSize : number, lineHeight : number) {
+    //     const tempElement = document.createElement('p');
+    //     tempElement.style.fontFamily = 'Rubik';
+    //     tempElement.style.position = 'absolute';
+    //     tempElement.style.visibility = 'hidden';
+    //     tempElement.style.whiteSpace = 'pre-wrap'; 
+    //     tempElement.style.width = `${maxWidth}px`; 
+    //     tempElement.style.fontSize = `${fontSize}px`; 
+    //     tempElement.style.wordBreak='break-word';
+    //     tempElement.style.overflowWrap='break-word';
+    //     tempElement.style.hyphens='auto';
+    //     tempElement.innerText = text; 
       
-        document.body.appendChild(tempElement);
+    //     document.body.appendChild(tempElement);
       
-        const height = tempElement.offsetHeight;
-        const width = tempElement.offsetWidth;
+    //     const height = tempElement.offsetHeight;
+    //     const width = tempElement.offsetWidth;
       
-        document.body.removeChild(tempElement);
+    //     document.body.removeChild(tempElement);
       
-        return {height:height,width:width};
-    }
+    //     return {height:height,width:width};
+    // }
 
     function isDateLessThan1SecondAgo(date : Date) {
         const now = new Date();
@@ -219,26 +255,28 @@ const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({sock
         return `Last online ${years} year${years > 1 ? 's' : ''} ago`;
     }
 
-    const uploadImage = async() =>{
+    const uploadImage = async() => {
         if(!imageChosen){
             return
         }
 
         const formData = new FormData();
-        formData.append("avatar", imageChosen);
+        formData.append("media", imageChosen);
 
         try {
             const response = await fetch(`http://${host}:${port}/api/media/images?chatId=${selectedChat?.id}`, {
             method: "POST",
             body: formData,
             headers:{'Authorization':`Bearer ${token}`}
-            
             });
         
             const result = await response.json();
-            console.log(result)
+            if (response.status === 200) {
+                return result.id;                
+            }
+            return null
         }catch{
-
+            return null
         }
     }
 
@@ -261,36 +299,7 @@ const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({sock
                     <img onClick={()=>setChatSettings(prev=> !prev)} src="/assets/imgs/command.svg" style={{height:30,position:'absolute',right:10,cursor:'pointer'}} />
                 </div>:null}
 
-                {/* CHAT SETTINGS */}
-                {/* CHAT SETTINGS */}
-                {/* CHAT SETTINGS */}
-
-                <div className='settings' style={{position:'absolute',zIndex:4,width:isMobile?'100%':'50%',maxWidth:!isMobile?200:'100%',backgroundColor:'#252525',right:0,transform:chatSettings?!isMobile?'translateX(0%)':'translateX(0%)':isMobile?'translateX(100%)':`translateX(${(width/2)>350?'350px':`${(width/2)}px`})`,top:(!chatRemoved)?60:isMobile?60:0,transition:'0.2s ease-in-out',borderRadius:'0 0 2px 0'}} >
-                    <div style={{width:'100%',display:'flex',flexDirection:"row",alignItems:'center',justifyContent:"center",padding:'10px 0',borderBottom:'1px solid #333',cursor:'default'}} >
-                        {selectedChat?.status === '0' && <p style={{color:selectedChat?.user.status === '0'?'#1DB954':selectedChat?.user.status === '2'?'#f22':'white',margin:'0 0 0 6px'}} >{selectedChat?.user.status === '0'?'Friend':selectedChat?.user.status === '2'?'Blocked':'Muted'}</p>}
-                        {selectedChat?.status === '2' && <p style={{color:'white',margin:'0 0 0 6px'}} >You've been Blocked</p>}
-                    </div>
-                    {selectedChat?.user.status !== '1' ? 
-                    <div onClick={()=>mute()} style={{width:'100%',cursor:'pointer',display:'flex',flexDirection:"row",alignItems:'center',justifyContent:"center",padding:'10px 0'}} >
-                        <img src="/assets/imgs/mute.svg" style={{height:25,opacity:0.5}} />
-                        <p style={{color:'white',margin:'0 0 0 6px'}} >Mute</p>
-                    </div>:
-                    <div onClick={()=>normal()} style={{width:'100%',cursor:'pointer',display:'flex',flexDirection:"row",alignItems:'center',justifyContent:"center",padding:'10px 0'}} >
-                        <img src="/assets/imgs/mute.svg" style={{height:25,opacity:0.5}} />
-                        <p style={{color:'#1DB954',margin:'0 0 0 6px'}} >UnMute</p>
-                    </div>}
-
-
-                    {selectedChat?.user.status !== '2' ? 
-                    <div onClick={()=>block()} style={{width:'100%',cursor:'pointer',display:'flex',flexDirection:"row",alignItems:'center',justifyContent:"center",padding:'10px 0'}} >
-                        <img src="/assets/imgs/block.svg" style={{height:25,opacity:0.5}} />
-                        <p style={{color:'#f22',margin:'0 0 0 6px'}} >Block</p>
-                    </div>:
-                    <div onClick={()=>normal()} style={{width:'100%',cursor:'pointer',display:'flex',flexDirection:"row",alignItems:'center',justifyContent:"center",padding:'10px 0'}} >
-                        <img src="/assets/imgs/block.svg" style={{height:25,opacity:0.5}} />
-                        <p style={{color:'#1DB954',margin:'0 0 0 6px'}} >UnBlock</p>
-                    </div>}
-                </div>
+                
 
                 
                 {/* MESSAGE INPUT */}
@@ -336,6 +345,7 @@ const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({sock
                                 if (mine) {
                                     return(
                                         <div key={i} className={`message mine ${justSent?'new':'old'}`} style={{padding:'10px 14px',maxWidth:isMobile?'calc(100% - 70px)':320,position:'relative',cursor:'default',marginTop:5,borderRadius:"7px 7px 2px 7px",backgroundColor:"#1DB954",alignSelf:"end",display:'flex',flexDirection:'column',alignItems:"start",justifyContent:"center"}} >
+                                            {msg.message.media && msg.message.link ?<img style={{width:'100%',borderRadius:5,marginBottom:5}} src={msg.message.link} />:null}
                                             {msg.message.reply?<div style={{height:30,backgroundColor:'white',opacity:0.9,borderRadius:5,display:'flex',alignSelf:'end',alignItems:'center',padding:'0 10px',width:"calc(100% - 20px)",marginBottom:10}} >
                                                 <p style={{color:"black",margin:0,fontWeight:'lighter',fontSize:16,overflow:'hidden',textOverflow:'ellipsis',textWrap:'nowrap'}} >{msg.message.reply.content}</p> 
                                             </div>:null}
@@ -347,6 +357,7 @@ const Chat = forwardRef<sendRefComp, ChatComponentProps>(function ChatFunc({sock
                                 }
                                 return(
                                     <div key={i} className={`message hes ${justSent?'new':'old'}`} style={{padding:'10px 14px',maxWidth:isMobile?'calc(100% - 70px)':320,position:'relative',cursor:'default',marginTop:5,boxSizing:'border-box',borderRadius:"7px 7px 7px 2px",backgroundColor:"white",alignSelf:"start",display:'flex',flexDirection:'column',alignItems:"end",justifyContent:"center"}} >
+                                        {msg.message.media && msg.message.link ?<img style={{width:'100%',borderRadius:5}} src={msg.message.link} />:null}
                                         {msg.message.reply?<div style={{height:30,backgroundColor:'#1DB954',opacity:0.9,borderRadius:5,display:'flex',alignSelf:'start',alignItems:'center',padding:'0 10px',width:"calc(100% - 20px)",marginBottom:10}} >
                                             <p style={{color:"white",margin:0,fontWeight:'lighter',fontSize:16,overflow:'hidden',textOverflow:'ellipsis',textWrap:'nowrap'}} >{msg.message.reply.content}</p> 
                                         </div>:null}

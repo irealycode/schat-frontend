@@ -33,7 +33,7 @@ export type TallMessage = {
     chatId: string,
     content: string,
     id: string,
-    media: boolean | null,
+    media: string | null,
     reply: ReplyType | null,
     sentAt: string,
     userId: string,
@@ -56,6 +56,7 @@ export type ChatType = {
 export type ReceivedMessage = {
     userId : string | undefined,
     chatId : string | undefined,
+    media : string | null,
     id : string,
     content : string,
     sentAt : string,
@@ -140,6 +141,8 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
     const [userStatus,setUserStatus] = React.useState("")
     const [loadingUsers,setLoadingUsers] = React.useState(false)
     const [loadingFriends,setLoadingFriends] = React.useState(false)
+    const [chatSettings, setChatSettings] = React.useState(false);
+    
     const isMobile = width < 769;
     
     const customNotif = (msg : string,color : string) => {
@@ -324,6 +327,11 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
         })
     }
 
+    const getImage = async(media : string) =>{
+        const res = await axios.get(`http://${host}:${port}/api/media/images?imageId=${encodeURIComponent(media)}&chatId=${selectedChat?.id}`,{headers:{'Authorization':`Bearer ${token}`}})
+        return res.data.url
+    }
+
     const addChat = (id : string) =>{
         axios.post(`http://${host}:${port}/api/chats?userId=${id}`,{}, {headers : {'Authorization':`Bearer ${token}`}}).then((res)=>{
 
@@ -346,6 +354,8 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
             }
         })
     }
+
+    
 
     const selectChat = (friend : ChatType) =>{
         axios.get(`http://${host}:${port}/api/messages?chatId=${friend.id}`,{headers:{'Authorization':`Bearer ${token}`}}).then((res)=>{
@@ -409,7 +419,12 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
     
 
     const openOneBanner = (type : number) => {
-        if (type === 0) {
+        if (type === -1) {
+            setOpenSearch(false);
+            setOpenSettings(false);
+            setOpenAccount(false);
+            setChatSettings(false)
+        }else if (type === 0) {
             setOpenSearch(!openSearch);
             setOpenSettings(false);
             setOpenAccount(false);
@@ -425,14 +440,20 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
         }
     }
 
-    const viewAccount = () =>{
-        setOpenAccount(true)
+    // const viewAccount = () =>{
+    //     setOpenAccount(true)
+    //     setOpenSettings(false)
+    // }
+
+    const closeAll = () =>{
+        setOpenAccount(false)
+        setOpenSearch(false)
         setOpenSettings(false)
     }
 
 
     return (
-    <div className='scale-d' style={{backgroundColor: "#121212",color: "#E0E0E0",height: height,width:width,overflow:'hidden',display: "flex",flexDirection: "column",alignItems: "center"}}>
+    <div  style={{backgroundColor: "#121212",color: "#E0E0E0",height: '100vh',width:'100vw',overflow:'hidden',display: "flex",flexDirection: "column",alignItems: "center"}}>
 
         {
             notifs.map((err,i)=>{
@@ -445,7 +466,10 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
         }
         
         <div style={{width:'100%',height:'100%',display:'flex',flexDirection:'row',alignItems:'center',justifyContent:'start',overflow:'hidden'}}>
-            <div style={{height:'100%',width:isMobile?'100%':'50%',position:isMobile?'absolute':'relative',zIndex:isMobile?3:11,maxWidth:!isMobile?350:'100%',display:'flex',transform:selectedChat && isMobile?'translateX(-100%)':'translateX(0%)',transition:'0.3s',flexDirection:'column',alignItems:'center',justifyContent:"start",backgroundColor:'#393939'}} >
+            <div  style={{height:'100%',width:isMobile?'100%':'50%',position:isMobile?'absolute':'relative',zIndex:isMobile?3:11,maxWidth:!isMobile?350:'100%',display:'flex',transform:selectedChat && isMobile?'translateX(-100%)':'translateX(0%)',transition:'0.3s',flexDirection:'column',alignItems:'center',justifyContent:"start",backgroundColor:'#393939'}} >
+                {(openAccount || openSearch || openSettings || chatSettings) && <div onClick={()=>openOneBanner(-1)} style={{position:'absolute',top:0,left:0,height:'100%',width:'100%',zIndex:-1}} ></div>}
+
+
                 <img onClick={()=>openOneBanner(0)} src='/assets/imgs/addUser.svg' style={{cursor:'pointer',position:'absolute',top:15,right:45,height:30}} />
                 <img onClick={()=>openOneBanner(1)} src='/assets/imgs/settings.svg' style={{cursor:'pointer',position:'absolute',top:15,right:10,height:30}} />
                 <h1 style={{ color:"white",fontSize:30,margin:'10px 0 0 15px',alignSelf:'start',fontWeight:500,display:'flex',flexDirection:'row',alignItems:"center",justifyContent:'center',cursor:'default' }}>Ch<img src='/assets/imgs/chat.svg' style={{height:30,filter:'brightness(0) saturate(100%) invert(49%) sepia(66%) saturate(575%) hue-rotate(88deg) brightness(102%) contrast(87%)'}} />tify</h1>
@@ -463,6 +487,8 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
                         <img src={selectedImage} style={{width:'50%',borderRadius:'100%'}} />
                 </div>:null}
                 <div style={{height:'calc(100% - 107px)',width:'100%',overflowY:'scroll',position:'relative'}} >
+                    {(openAccount || openSearch || openSettings || chatSettings) && <div onClick={()=>openOneBanner(-1)} style={{position:'absolute',top:0,left:0,height:'100%',width:'100%',zIndex:0}} ></div>}
+
 
                     
                     {friends.filter((friend)=>friend.user.username.trim().toLocaleLowerCase().includes(searchFriends.toLocaleLowerCase()) && (filterType === 0 || (filterType === 2 && friend.last_message && friend.last_message.new) || (filterType === 1 && friend.last_message && !friend.last_message.new))).map((friend,i)=>{
@@ -497,7 +523,7 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
                 </div>
             </div>
             
-            <div className='settings' style={{position:'absolute',zIndex:4,width:isMobile?'100%':'50%',maxWidth:!isMobile?200:'100%',backgroundColor:'#252525',left:0,transform:!openSettings?!isMobile?'translateX(0%)':'translateX(-100%)':isMobile?'translateX(0%)':`translateX(${(width/2)>350?'350px':`${(width/2)}px`})`,top:(!chatRemoved)?60:isMobile?60:0,transition:'0.2s ease-in-out',borderRadius:'0 0 2px 0'}} >
+            <div className='settings' style={{position:'absolute',zIndex:10,width:isMobile?'100%':'50%',maxWidth:!isMobile?200:'100%',backgroundColor:'#252525',left:0,transform:!openSettings?!isMobile?'translateX(0%)':'translateX(-100%)':isMobile?'translateX(0%)':`translateX(${(width/2)>350?'350px':`${(width/2)}px`})`,top:(!chatRemoved)?60:isMobile?60:0,transition:'0.2s ease-in-out',borderRadius:'0 0 2px 0'}} >
                 <div style={{width:'100%',cursor:'pointer',display:'flex',flexDirection:"row",alignItems:'center',justifyContent:"center",padding:'10px 0'}} >
                     <p style={{color:'#1DB954',margin:'0 0 0 6px'}} >Privacy Policy</p>
                 </div>
@@ -546,6 +572,41 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
                 {foundUsers.length === 0 && searchUsers.trim() === "" && !loadingUsers ?<p style={{color:'white',width:'100%',textAlign:'center',fontSize:17,margin:'0px 0 0 -15px'}} >Search for new friends</p>:null}
             </div>
 
+            {/* CHAT SETTINGS */}
+            {/* CHAT SETTINGS */}
+            {/* CHAT SETTINGS */}
+
+            {<div className='settings' style={{position:'absolute',zIndex:10,width:isMobile?'100%':'50%',maxWidth:!isMobile?200:'100%',backgroundColor:'#252525',right:0,transform:chatSettings?!isMobile?'translateX(0%)':'translateX(0%)':isMobile?'translateX(100%)':`translateX(${(width/2)>350?'350px':`${(width/2)}px`})`,top:(!chatRemoved)?60:isMobile?60:0,transition:'0.2s ease-in-out',borderRadius:'0 0 2px 0'}} >
+                <div style={{width:'100%',display:'flex',flexDirection:"row",alignItems:'center',justifyContent:"center",padding:'10px 0',borderBottom:'1px solid #333',cursor:'default'}} >
+                    {selectedChat?.status === '0' && <p style={{color:selectedChat?.user.status === '0'?'#1DB954':selectedChat?.user.status === '2'?'#f22':'white',margin:'0 0 0 6px'}} >{selectedChat?.user.status === '0'?'Friend':selectedChat?.user.status === '2'?'Blocked':'Muted'}</p>}
+                    {selectedChat?.status === '2' && <p style={{color:'white',margin:'0 0 0 6px'}} >You've been Blocked</p>}
+                </div>
+                {selectedChat?.user.status !== '1' ? 
+                <div onClick={()=>mute()} style={{width:'100%',cursor:'pointer',display:'flex',flexDirection:"row",alignItems:'center',justifyContent:"center",padding:'10px 0'}} >
+                    <img src="/assets/imgs/mute.svg" style={{height:25,opacity:0.5}} />
+                    <p style={{color:'white',margin:'0 0 0 6px'}} >Mute</p>
+                </div>:
+                <div onClick={()=>normal()} style={{width:'100%',cursor:'pointer',display:'flex',flexDirection:"row",alignItems:'center',justifyContent:"center",padding:'10px 0'}} >
+                    <img src="/assets/imgs/mute.svg" style={{height:25,opacity:0.5}} />
+                    <p style={{color:'#1DB954',margin:'0 0 0 6px'}} >UnMute</p>
+                </div>}
+
+
+                {selectedChat?.user.status !== '2' ? 
+                <div onClick={()=>block()} style={{width:'100%',cursor:'pointer',display:'flex',flexDirection:"row",alignItems:'center',justifyContent:"center",padding:'10px 0'}} >
+                    <img src="/assets/imgs/block.svg" style={{height:25,opacity:0.5}} />
+                    <p style={{color:'#f22',margin:'0 0 0 6px'}} >Block</p>
+                </div>:
+                <div onClick={()=>normal()} style={{width:'100%',cursor:'pointer',display:'flex',flexDirection:"row",alignItems:'center',justifyContent:"center",padding:'10px 0'}} >
+                    <img src="/assets/imgs/block.svg" style={{height:25,opacity:0.5}} />
+                    <p style={{color:'#1DB954',margin:'0 0 0 6px'}} >UnBlock</p>
+                </div>}
+            </div>}
+
+            {/* CHAT SETTINGS */}
+            {/* CHAT SETTINGS */}
+            {/* CHAT SETTINGS */}
+
             <div style={{position:'absolute',zIndex:10,width:isMobile?'100%':'50%',maxWidth:!isMobile?350:'100%',height:'100%',padding:30,boxSizing:'border-box',backgroundColor:'#252525',left:0,overflowY:'scroll',transform:!openAccount?!isMobile?'translateX(0%)':'translateX(-100%)':isMobile?'translateX(0%)':'translateX(100%)',top:0,transition:'0.2s ease-in-out',borderRadius:'0 0 2px 0',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'start'}} >
                 <img onClick={()=>openOneBanner(2)} src="/assets/imgs/arrow.svg" style={{height:36,cursor:'pointer',position:'absolute',left:18,top:10}} />
                 <img src={user?.avatar} style={{width:'40%',borderRadius:'100%'}} />
@@ -593,15 +654,22 @@ const HomeLogged: React.FC<HomeProps> = ({token}) => {
                     }}
                 />
             </div>
+            
 
+            {/* CLOSER */}
+            {/* CLOSER */}
+            {/* CLOSER */}
 
+            {(openAccount || openSearch || openSettings || chatSettings) && <div onClick={()=>openOneBanner(-1)} style={{position:'absolute',top:0,left:0,height:'100%',width:'100%',zIndex:9}} ></div>}
+
+            
 
             {/* INSIDE */}
             {/* INSIDE */}
             {/* INSIDE */}
 
             
-            <Chat ref={chatRef} token={token} selectedChatRef={selectedChatRef} typer={typer} socket={sockett} userStatus={userStatus} selectedChat={selectedChat} setSelectedChat={setSelectedChat} initialMessages={messages} userId={user?.id} chatRemoved={chatRemoved} setChatRemoved={setChatRemoved} setFriends={setFriends} setIsTyping={setIsTyping} isTyping={isTyping} block={block} mute={mute} normal={normal} />
+            <Chat ref={chatRef} token={token} selectedChatRef={selectedChatRef} typer={typer} socket={sockett} userStatus={userStatus} selectedChat={selectedChat} setSelectedChat={setSelectedChat} initialMessages={messages} userId={user?.id} chatRemoved={chatRemoved} setChatRemoved={setChatRemoved} setFriends={setFriends} setIsTyping={setIsTyping} isTyping={isTyping} setChatSettings={setChatSettings} getImage={getImage} />
 
         </div>
     </div>
